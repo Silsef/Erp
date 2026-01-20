@@ -7,6 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Erp_Api", "Erp_Api\Erp_Api.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared_Erp", "Shared_Erp\Shared_Erp.csproj", "{1FEFA9B4-16CA-412E-9159-4B8AF6317F31}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Erp_Blazor", "Erp_Blazor\Erp_Blazor.csproj", "{1C317044-A33F-4B5E-94F7-2330F2B78E5D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{9C8CB701-102D-CF49-A3E0-89AC09D42C2C}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +28,10 @@ Global
 		{1FEFA9B4-16CA-412E-9159-4B8AF6317F31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FEFA9B4-16CA-412E-9159-4B8AF6317F31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FEFA9B4-16CA-412E-9159-4B8AF6317F31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C317044-A33F-4B5E-94F7-2330F2B78E5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C317044-A33F-4B5E-94F7-2330F2B78E5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C317044-A33F-4B5E-94F7-2330F2B78E5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C317044-A33F-4B5E-94F7-2330F2B78E5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
