@@ -1,0 +1,194 @@
+﻿.offres-container {
+    padding: 1.5rem;
+}
+
+    .offres-container h2 {
+        margin-bottom: 1.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+/* Grille à 3 colonnes */
+.three-columns-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    min-height: 70vh;
+}
+
+/* Style des colonnes */
+.column {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.column-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .column-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .column-header .btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-size: 0.85rem;
+    }
+
+        .column-header .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+/* Liste d'items */
+.items-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* Style des items */
+.item {
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .item:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Item sélectionné */
+    .item.selected {
+        border-color: #667eea;
+        background: #e8ebff;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Item filtré (grisé) */
+    .item.filtered {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+/* Contenu des items */
+.item-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #333;
+    margin-bottom: 0.4rem;
+}
+
+.item-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+    .item-meta .badge {
+        font-size: 0.75rem;
+    }
+
+    .item-meta .salary {
+        color: #28a745;
+        font-weight: 500;
+    }
+
+.item-date {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+}
+
+.item-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.item-salary {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+}
+
+.item-notes {
+    font-size: 0.85rem;
+    color: #555;
+    background: rgba(0,0,0,0.03);
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Couleurs spécifiques par colonne */
+.offres-column .item {
+    border-left: 4px solid #667eea;
+}
+
+.candidatures-column .item {
+    border-left: 4px solid #4facfe;
+}
+
+.entretiens-column .item {
+    border-left: 4px solid #43e97b;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .three-columns-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Scrollbar custom */
+.items-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.items-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.items-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+    .items-list::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }

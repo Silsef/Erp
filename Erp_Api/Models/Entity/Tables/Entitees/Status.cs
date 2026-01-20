@@ -8,12 +8,12 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("tco_id")]
+        [Column("sta_id")]
         public int Id { get; set; }
 
-        [Column("tco_libelle")]
+        [Column("sta_libelle")]
         public string Libelle { get; set; } = null!;
-        public ICollection<Candidature> Candidature { get; set; } = new List<Candidature>();
+        public ICollection<Candidature> Candidatures { get; set; } = new List<Candidature>();
 
     }
 }

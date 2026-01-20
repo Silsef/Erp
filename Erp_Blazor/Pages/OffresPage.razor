@@ -1,0 +1,256 @@
+﻿@page "/offres"
+@inject IOffreService OffreService
+@inject ICandidatureService CandidatureService
+@inject IEntretienService EntretienService
+@attribute [Authorize]
+
+<PageTitle>Gestion des Offres</PageTitle>
+
+<div class="offres-container">
+    <h2>📋 Gestion des Offres & Recrutement</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="three-columns-grid">
+            <!-- Colonne 1 : Offres -->
+            <div class="column offres-column">
+                <div class="column-header">
+                    <h4>💼 Offres d'emploi (@offres.Count)</h4>
+                    <button class="btn btn-sm btn-primary" @onclick="ClearFilters">
+                        🔄 Tout afficher
+                    </button>
+                </div>
+                <div class="items-list">
+                    @foreach (var offre in offres)
+                    {
+                        <div class="item offre-item @(IsOffreFiltered(offre.Id) ? "filtered" : "") @(selectedOffreId == offre.Id ? "selected" : "")"
+                             @onclick="() => SelectOffre(offre.Id)">
+                            <div class="item-title">@offre.Titre</div>
+                            <div class="item-subtitle">@offre.NomEntreprise</div>
+                            <div class="item-meta">
+                                <span class="badge bg-info">@offre.TypeContratLibelle</span>
+                                @if (offre.SalaireMin.HasValue || offre.SalaireMax.HasValue)
+                                {
+                                    <span class="salary">💰 @GetSalaireDisplay(offre)</span>
+                                }
+                            </div>
+                            <div class="item-date">📅 @offre.DatePublication.ToString("dd/MM/yyyy")</div>
+                            <div class="item-stats">
+                                <span>👥 @candidatures.Count(c => c.OffreEmploiId == offre.Id) candidature(s)</span>
+                                <span>📞 @entretiens.Count(e => e.OffreId == offre.Id) entretien(s)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Colonne 2 : Candidatures -->
+            <div class="column candidatures-column">
+                <div class="column-header">
+                    <h4>👥 Candidatures (@candidatures.Count)</h4>
+                </div>
+                <div class="items-list">
+                    @foreach (var candidature in candidatures)
+                    {
+                        <div class="item candidature-item @(IsCandidatureFiltered(candidature.Id) ? "filtered" : "") @(selectedCandidatureId == candidature.Id ? "selected" : "")"
+                             @onclick="() => SelectCandidature(candidature.Id)">
+                            <div class="item-title">@candidature.Prenom @candidature.Nom</div>
+                            <div class="item-subtitle">@candidature.OffreTitre</div>
+                            <div class="item-meta">
+                                <span>📧 @candidature.Email</span>
+                                @if (!string.IsNullOrEmpty(candidature.Telephone))
+                                {
+                                    <span>📞 @candidature.Telephone</span>
+                                }
+                            </div>
+                            @if (candidature.PretentionsSalariales.HasValue)
+                            {
+                                <div class="item-salary">💰 @candidature.PretentionsSalariales.Value.ToString("N0") €</div>
+                            }
+                            <div class="item-date">📅 @candidature.DateCandidature.ToString("dd/MM/yyyy")</div>
+                            <div class="item-stats">
+                                <span>📞 @entretiens.Count(e => e.CandidatureId == candidature.Id) entretien(s)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Colonne 3 : Entretiens -->
+            <div class="column entretiens-column">
+                <div class="column-header">
+                    <h4>📞 Entretiens (@entretiens.Count)</h4>
+                </div>
+                <div class="items-list">
+                    @foreach (var entretien in entretiens)
+                    {
+                        <div class="item entretien-item @(IsEntretienFiltered(entretien.Id) ? "filtered" : "") @(selectedEntretienId == entretien.Id ? "selected" : "")"
+                             @onclick="() => SelectEntretien(entretien.Id)">
+                            <div class="item-title">@entretien.PrenomCandidat @entretien.NomCandidat</div>
+                            <div class="item-subtitle">@entretien.OffreTitre</div>
+                            <div class="item-meta">
+                                <span>📅 @entretien.DateEntretien.ToString("dd/MM/yyyy HH:mm")</span>
+                                @if (!string.IsNullOrEmpty(entretien.Nominterviewer))
+                                {
+                                    <span>👤 @entretien.Nominterviewer</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(entretien.Notes))
+                            {
+                                <div class="item-notes">📝 @entretien.Notes</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<OffreDTO> offres = new();
+    private List<CandidatureDTO> candidatures = new();
+    private List<EntretienDTO> entretiens = new();
+
+    private int? selectedOffreId = null;
+    private int? selectedCandidatureId = null;
+    private int? selectedEntretienId = null;
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            offres = await OffreService.GetAll();
+            candidatures = await CandidatureService.GetAll();
+            entretiens = await EntretienService.GetAll();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement : {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Sélection d'une offre
+    private void SelectOffre(int offreId)
+    {
+        if (selectedOffreId == offreId)
+        {
+            // Désélectionner si on clique à nouveau
+            ClearFilters();
+        }
+        else
+        {
+            selectedOffreId = offreId;
+            selectedCandidatureId = null;
+            selectedEntretienId = null;
+        }
+    }
+
+    // Sélection d'une candidature
+    private void SelectCandidature(int candidatureId)
+    {
+        if (selectedCandidatureId == candidatureId)
+        {
+            ClearFilters();
+        }
+        else
+        {
+            var candidature = candidatures.FirstOrDefault(c => c.Id == candidatureId);
+            if (candidature != null)
+            {
+                selectedOffreId = candidature.OffreEmploiId;
+                selectedCandidatureId = candidatureId;
+                selectedEntretienId = null;
+            }
+        }
+    }
+
+    // Sélection d'un entretien
+    private void SelectEntretien(int entretienId)
+    {
+        if (selectedEntretienId == entretienId)
+        {
+            ClearFilters();
+        }
+        else
+        {
+            var entretien = entretiens.FirstOrDefault(e => e.Id == entretienId);
+            if (entretien != null)
+            {
+                selectedOffreId = entretien.OffreId;
+                selectedCandidatureId = entretien.CandidatureId;
+                selectedEntretienId = entretienId;
+            }
+        }
+    }
+
+    private void ClearFilters()
+    {
+        selectedOffreId = null;
+        selectedCandidatureId = null;
+        selectedEntretienId = null;
+    }
+
+    // Vérifier si une offre doit être grisée
+    private bool IsOffreFiltered(int offreId)
+    {
+        if (selectedOffreId == null) return false;
+        return selectedOffreId != offreId;
+    }
+
+    // Vérifier si une candidature doit être grisée
+    private bool IsCandidatureFiltered(int candidatureId)
+    {
+        if (selectedOffreId == null) return false;
+
+        var candidature = candidatures.FirstOrDefault(c => c.Id == candidatureId);
+        return candidature?.OffreEmploiId != selectedOffreId;
+    }
+
+    // Vérifier si un entretien doit être grisé
+    private bool IsEntretienFiltered(int entretienId)
+    {
+        if (selectedOffreId == null && selectedCandidatureId == null) return false;
+
+        var entretien = entretiens.FirstOrDefault(e => e.Id == entretienId);
+        if (entretien == null) return true;
+
+        if (selectedCandidatureId.HasValue)
+        {
+            return entretien.CandidatureId != selectedCandidatureId;
+        }
+
+        return entretien.OffreId != selectedOffreId;
+    }
+
+    private string GetSalaireDisplay(OffreDTO offre)
+    {
+        if (offre.SalaireMin.HasValue && offre.SalaireMax.HasValue)
+            return $"{offre.SalaireMin:N0} - {offre.SalaireMax:N0} €";
+        if (offre.SalaireMin.HasValue)
+            return $"À partir de {offre.SalaireMin:N0} €";
+        if (offre.SalaireMax.HasValue)
+            return $"Jusqu'à {offre.SalaireMax:N0} €";
+        return "";
+    }
+}

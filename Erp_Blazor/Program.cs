@@ -1,10 +1,11 @@
+using Blazored.LocalStorage;
 using Erp_Blazor;
+using Erp_Blazor.Service.Interfaces;
 using Erp_Blazor.Service.Security;
 using Erp_Blazor.Service.WebServices;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.AspNetCore.Components.Authorization;
-using Blazored.LocalStorage;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -32,6 +33,9 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
 builder.Services.AddAuthorizationCore();
 
 // Ajouter vos services métier
-builder.Services.AddScoped<EmployeWebService>();
+builder.Services.AddScoped<IEmployeService,EmployeWebService>();
+builder.Services.AddScoped<IOffreService, OffreWebService>();
+builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
+builder.Services.AddScoped<IEntretienService, EntretienWebService>();
 
 await builder.Build().RunAsync();

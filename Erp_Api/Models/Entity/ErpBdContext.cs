@@ -19,7 +19,13 @@ namespace Erp_Api.Models.Entity
         public DbSet<Adresse> Adresses { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<A_Pour_Role> A_Pour_Roles { get; set; }
-
+        public DbSet<Candidature> Candidatures { get; set; }
+        public DbSet<Status> Statuses { get; set; }
+        public DbSet<Offre> Offres { get; set; }
+        public DbSet<TypeContrat> TypeContrats { get; set; }
+        public DbSet<Entretien> Entretiens { get; set; }
+        public DbSet<TypeEntretien> TypeEntretiens { get; set; }
+        public DbSet<Plateforme> Plateformes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -66,6 +72,32 @@ namespace Erp_Api.Models.Entity
                 .WithMany(r => r.EmployeRoles)
                 .HasForeignKey(apr => apr.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Candidature>()
+                .HasOne(c => c.Status)
+                .WithMany(s => s.Candidatures)
+                .HasForeignKey(c => c.StatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Offre -> TypeContrat
+            modelBuilder.Entity<Offre>()
+                .HasOne(o => o.TypeContrat)
+                .WithMany(tc => tc.Offres)
+                .HasForeignKey(o => o.TypeContratId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Entretien>()
+                .HasOne(e => e.TypeEntretien)
+                .WithMany()
+                .HasForeignKey(e => e.TypeEntretienId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Candidature -> Offre
+            modelBuilder.Entity<Candidature>()
+                .HasOne(c => c.Offre)
+                .WithMany(o => o.Candidatures)
+                .HasForeignKey(c => c.OffreEmploiId)
+                .OnDelete(DeleteBehavior.Cascade); 
 
             OnModelCreatingPartial(modelBuilder);
 

@@ -1,0 +1,32 @@
+﻿@page "/rh"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Ressources Humaines - ERP</PageTitle>
+
+<div class="home-container">
+
+    <div class="dashboard-grid">
+
+        <a href="offres" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">Offres</span>
+                <span class="card-desc">Gestion des offres, candidatures et entretiens</span>
+            </div>
+        </a>
+
+        <a href="employees" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">Employés</span>
+                <span class="card-desc">Gestion des employés</span>
+            </div>
+        </a>
+
+    </div>
+</div>

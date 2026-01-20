@@ -25,5 +25,11 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         [Column("ent_notes")]
         public string? Notes { get; set; }
+
+        [Column("ent_type_entretien_id")]
+        public int TypeEntretienId { get; set; }
+
+        [ForeignKey("TypeEntretienId")]
+        public TypeEntretien TypeEntretien { get; set; } = null!;
     }
 }

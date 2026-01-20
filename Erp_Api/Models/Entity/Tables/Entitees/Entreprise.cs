@@ -19,6 +19,10 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("ent_telephone")]
         public string? Telephone { get; set; }
 
+        [Column("ent_type_entretien_id")]
+        public int? TypeEntretienId { get; set; }
+        public TypeEntretien? TypeEntretien { get; set; }
+
         public ICollection<EmployeEntreprise> EmployeEntreprises { get; set; } = new List<EmployeEntreprise>();
 
     }

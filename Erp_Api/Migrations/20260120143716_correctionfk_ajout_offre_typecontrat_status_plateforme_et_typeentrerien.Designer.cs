@@ -3,6 +3,7 @@ using System;
 using Erp_Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erp_Api.Migrations
 {
     [DbContext(typeof(ErpBdContext))]
-    partial class ErpBdContextModelSnapshot : ModelSnapshot
+    [Migration("20260120143716_correctionfk_ajout_offre_typecontrat_status_plateforme_et_typeentrerien")]
+    partial class correctionfk_ajout_offre_typecontrat_status_plateforme_et_typeentrerien
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,7 +111,7 @@ namespace Erp_Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("can_offre_emploi_id");
 
-                    b.Property<int?>("PlateformeId")
+                    b.Property<int>("PlateformeId")
                         .HasColumnType("integer")
                         .HasColumnName("can_plateforme_id");
 
@@ -121,7 +124,7 @@ namespace Erp_Api.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("can_pretentions_salariales");
 
-                    b.Property<int?>("StatusId")
+                    b.Property<int>("StatusId")
                         .HasColumnType("integer")
                         .HasColumnName("can_status_id");
 
@@ -212,13 +215,7 @@ namespace Erp_Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ent_telephone");
 
-                    b.Property<int?>("TypeEntretienId")
-                        .HasColumnType("integer")
-                        .HasColumnName("ent_type_entretien_id");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TypeEntretienId");
 
                     b.ToTable("t_e_entreprise_ent", "erp");
                 });
@@ -495,12 +492,15 @@ namespace Erp_Api.Migrations
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Plateforme", "Plateforme")
                         .WithMany("Candidature")
-                        .HasForeignKey("PlateformeId");
+                        .HasForeignKey("PlateformeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Status", "Status")
                         .WithMany("Candidatures")
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Employe");
 
@@ -509,15 +509,6 @@ namespace Erp_Api.Migrations
                     b.Navigation("Plateforme");
 
                     b.Navigation("Status");
-                });
-
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Entreprise", b =>
-                {
-                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.TypeEntretien", "TypeEntretien")
-                        .WithMany()
-                        .HasForeignKey("TypeEntretienId");
-
-                    b.Navigation("TypeEntretien");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Entretien", b =>

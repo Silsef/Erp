@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared_Erp
+namespace Shared_Erp.Adresse
 {
     public class AdresseDTO
     {

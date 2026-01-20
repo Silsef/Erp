@@ -44,5 +44,13 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("can_employe_id")]
         public int? EmployeId { get; set; }
         public Employe? Employe { get; set; }
+
+        [Column("can_status_id")]
+        public int? StatusId { get; set; }
+        public Status? Status { get; set; }
+
+        [Column("can_plateforme_id")]
+        public int? PlateformeId { get; set; }
+        public Plateforme? Plateforme { get; set; }
     }
 }

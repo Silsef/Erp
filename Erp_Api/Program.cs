@@ -22,6 +22,9 @@ builder.Services.AddAutoMapper(typeof(MapperProfile));
 
 // Managers
 builder.Services.AddScoped<EmployeManager>();
+builder.Services.AddScoped<OffreManager>();
+builder.Services.AddScoped<CandidatureManager>();
+builder.Services.AddScoped<EntretienManager>();
 
 // Configuration JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("App:Jwt");
