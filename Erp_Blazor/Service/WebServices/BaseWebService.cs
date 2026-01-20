@@ -18,7 +18,7 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
     // --- LECTURE ---
     public async Task<List<TRead>> GetAll()
     {
-        return await _client.GetFromJsonAsync<List<TRead>>(_endpoint);
+        return await _client.GetFromJsonAsync<List<TRead>>(_endpoint+"/GetAll");
     }
 
     public async Task<TRead> GetByID(int id)

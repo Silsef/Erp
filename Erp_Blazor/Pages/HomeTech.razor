@@ -1,0 +1,31 @@
+﻿@page "/hometech"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Accueil - ERP</PageTitle>
+
+<div class="home-container">
+
+    <div class="dashboard-grid">
+
+        <a href="projets" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">Gestion de Projets</span>
+                <span class="card-desc">Suivi, planning et documents</span>
+            </div>
+        </a>
+
+        <a href="rd" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                <i class="bi bi-virus"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">R&D</span>
+                <span class="card-desc">Expériences et résultats</span>
+            </div>
+        </a>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+﻿@page "/homeAdmin"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Accueil - ERP</PageTitle>
+
+<div class="home-container">
+
+    <div class="dashboard-grid">
+        <a href="rh" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">Ressources Humaines</span>
+                <span class="card-desc">Employés et recrutements</span>
+            </div>
+        </a>
+
+        <a href="compta" class="nav-card">
+            <div class="card-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-title">Comptabilité</span>
+                <span class="card-desc">Facturation et trésorerie</span>
+            </div>
+        </a>
+
+    </div>
+</div>
