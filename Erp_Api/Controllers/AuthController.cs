@@ -6,6 +6,8 @@ using System.Security.Claims;
 using System.Text;
 using Shared_Erp.Auth;
 using BCrypt.Net;
+using Erp_Api.Models.Entity;
+using Erp_Api.Models.Entity.Tables.Entitees;
 
 namespace Erp_Api.Controllers
 {
@@ -73,22 +75,21 @@ namespace Erp_Api.Controllers
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             // Créer le nouvel employé
-            var employe = new Erp_Api.Models.Entity.Tables.Entitees.Employe
-            {
-                Nom = request.Nom,
-                Prenom = request.Prenom,
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                Login = $"{request.Nom[0]}{request.Prenom}".ToLower(),
-                Telephone = request.Telephone,
-                DateNaissance = request.DateNaissance,
-                NumSecuriteSociale = request.NumSecuriteSociale
-            };
+            Employe emp = new Employe();
 
-            await _employeManager.AddAsync(employe);
+            emp.Email = request.Email;
+            emp.Nom = request.Nom;
+            emp.Prenom = request.Prenom;
+            emp.PasswordHash = passwordHash;
+            emp.Login = $"{request.Nom[0]}{request.Prenom}".ToLower();
+            emp.DateNaissance = request.DateNaissance;
+            emp.NumSecuriteSociale = request.NumSecuriteSociale;
+            emp.Telephone = request.Telephone;
+
+            await _employeManager.AddAsync(emp);
 
             // Générer le token JWT
-            var token = GenerateJwtToken(employe.Id, employe.Email, employe.Nom, employe.Prenom);
+            var token = GenerateJwtToken(emp.Id, emp.Email, emp.Nom, emp.Prenom);
 
             // Créer le cookie HTTP-only
             Response.Cookies.Append("access_token", token, new CookieOptions
@@ -102,10 +103,10 @@ namespace Erp_Api.Controllers
             return CreatedAtAction(nameof(Register), new LoginResponseDTO
             {
                 Token = token,
-                EmployeId = employe.Id,
-                Email = employe.Email,
-                Nom = employe.Nom,
-                Prenom = employe.Prenom
+                EmployeId = emp.Id,
+                Email = emp.Email,
+                Nom = emp.Nom,
+                Prenom = emp.Prenom
             });
         }
 

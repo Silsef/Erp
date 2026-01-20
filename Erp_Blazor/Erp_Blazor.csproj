@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.*" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.19" PrivateAssets="all" />
 	  <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
@@ -16,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Composant\" />
     <Folder Include="ViewModel\" />
   </ItemGroup>
 

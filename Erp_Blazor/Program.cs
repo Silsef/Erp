@@ -1,6 +1,9 @@
+using Blazored.LocalStorage;
+using Erp_Blazor.Service.Security;
+using Erp_Blazor.Service.WebServices;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Erp_Blazor.Service.WebServices;
 
 namespace Erp_Blazor
 {
@@ -13,7 +16,7 @@ namespace Erp_Blazor
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
             // Configuration de l'URL de base de l'API
-            var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5092";
+            var apiBaseUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7223";
 
             // HttpClient simple - les cookies sont gérés automatiquement par le navigateur
             builder.Services.AddScoped(sp => new HttpClient
@@ -21,8 +24,13 @@ namespace Erp_Blazor
                 BaseAddress = new Uri(apiBaseUrl)
             });
 
+            builder.Services.AddBlazoredLocalStorage();
+            builder.Services.AddAuthorizationCore();
+
             // Enregistrer les services
             builder.Services.AddScoped<AuthService>();
+
+            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
             await builder.Build().RunAsync();
         }
