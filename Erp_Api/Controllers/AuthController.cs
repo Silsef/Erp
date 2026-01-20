@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Shared_Erp.Auth;
+using BCrypt.Net;
 
 namespace Erp_Api.Controllers
 {
@@ -32,10 +33,9 @@ namespace Erp_Api.Controllers
             if (employe == null)
                 return Unauthorized(new { message = "Email ou mot de passe incorrect" });
 
-            // TODO: Vérifier le mot de passe haché
-            // Pour l'instant, on simule la vérification
-            // if (!VerifyPassword(request.Password, employe.PasswordHash))
-            //     return Unauthorized(new { message = "Email ou mot de passe incorrect" });
+            // Vérifier le mot de passe avec BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, employe.PasswordHash))
+                return Unauthorized(new { message = "Email ou mot de passe incorrect" });
 
             // Générer le token JWT
             var token = GenerateJwtToken(employe.Id, employe.Email, employe.Nom, employe.Prenom);
@@ -50,6 +50,55 @@ namespace Erp_Api.Controllers
             });
 
             return Ok(new LoginResponseDTO
+            {
+                Token = token,
+                EmployeId = employe.Id,
+                Email = employe.Email,
+                Nom = employe.Nom,
+                Prenom = employe.Prenom
+            });
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(LoginResponseDTO), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<LoginResponseDTO>> Register([FromBody] RegisterRequestDTO request)
+        {
+            // Vérifier si l'email existe déjà
+            var existingUser = await _employeManager.GetByEmailAsync(request.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Un compte avec cet email existe déjà" });
+
+            // Hasher le mot de passe
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            // Créer le nouvel employé
+            var employe = new Erp_Api.Models.Entity.Tables.Entitees.Employe
+            {
+                Nom = request.Nom,
+                Prenom = request.Prenom,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                Telephone = request.Telephone,
+                DateNaissance = request.DateNaissance,
+                NumSecuriteSociale = request.NumSecuriteSociale
+            };
+
+            await _employeManager.AddAsync(employe);
+
+            // Générer le token JWT
+            var token = GenerateJwtToken(employe.Id, employe.Email, employe.Nom, employe.Prenom);
+
+            // Créer le cookie HTTP-only
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(24)
+            });
+
+            return CreatedAtAction(nameof(Register), new LoginResponseDTO
             {
                 Token = token,
                 EmployeId = employe.Id,

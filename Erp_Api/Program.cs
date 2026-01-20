@@ -38,6 +38,17 @@ namespace Erp_Api
 
             builder.Services.AddAutoMapper(typeof(MapperProfile));
 
+            // Configuration CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowBlazor", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5001", "https://localhost:7129")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); // Important pour les cookies
+                });
+            });
 
             builder.Services.AddAuthentication(options =>
             {
@@ -65,8 +76,8 @@ namespace Erp_Api
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    ValidIssuer = builder.Configuration["App:Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["App:Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(builder.Configuration["App:Jwt:SecretKey"])
                     )
@@ -79,11 +90,6 @@ namespace Erp_Api
                 config.AddPolicy(Policies.Admin, Policies.AdminLogged());
             });
 
-
-
-
-
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -95,8 +101,11 @@ namespace Erp_Api
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            // IMPORTANT : CORS doit être avant Authentication et Authorization
+            app.UseCors("AllowBlazor");
 
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 

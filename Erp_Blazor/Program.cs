@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Erp_Blazor.Service.WebServices;
 
 namespace Erp_Blazor
 {
@@ -11,7 +12,17 @@ namespace Erp_Blazor
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            // Configuration de l'URL de base de l'API
+            var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5092";
+
+            // HttpClient simple - les cookies sont gérés automatiquement par le navigateur
+            builder.Services.AddScoped(sp => new HttpClient
+            {
+                BaseAddress = new Uri(apiBaseUrl)
+            });
+
+            // Enregistrer les services
+            builder.Services.AddScoped<AuthService>();
 
             await builder.Build().RunAsync();
         }
