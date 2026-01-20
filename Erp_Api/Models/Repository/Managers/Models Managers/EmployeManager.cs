@@ -22,12 +22,13 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet.Include(c => c.EmployeEntreprises).ThenInclude(c => c.Entreprise).Include(r=> r.Employeroles).ThenInclude(a=>a.Role).FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<Employe?> GetByEmailAsync(string email)
+        public async Task<Employe?> GetByEmailLoginAsync(string email)
         {
             return await dbSet
                 .Include(c => c.Employeroles)
                     .ThenInclude(a => a.Role)
-                .FirstOrDefaultAsync(e => e.Email == email);
+                    .Include(a=> a.Employeroles)
+                .FirstOrDefaultAsync(e => e.Email == email  ||  e .Login == email);
         }
     }
 }

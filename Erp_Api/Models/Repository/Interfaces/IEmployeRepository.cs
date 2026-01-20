@@ -4,6 +4,6 @@ namespace Erp_Api.Models.Repository.Interfaces
 {
     public interface IEmployeRepository
     {
-        Task<Employe?> GetByEmailAsync(string email);
+        Task<Employe?> GetByEmailLoginAsync(string email);
     }
 }

@@ -16,8 +16,8 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("emp_prenom")]
         public string Prenom { get; set; } = null!;
 
-        [NotMapped]
-        public string Login => $"{Nom[0]}{Prenom}".ToLower();
+        [Column("emp_login")]
+        public string Login { get; set; } 
 
         [Column("emp_password_hash")]
         public string PasswordHash { get; set; }

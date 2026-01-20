@@ -28,7 +28,7 @@ namespace Erp_Api.Controllers
         public async Task<ActionResult<LoginResponseDTO>> Login([FromBody] LoginRequestDTO request)
         {
             // Récupérer l'employé par email
-            var employe = await _employeManager.GetByEmailAsync(request.Email);
+            var employe = await _employeManager.GetByEmailLoginAsync(request.Identifiant);
 
             if (employe == null)
                 return Unauthorized(new { message = "Email ou mot de passe incorrect" });
@@ -65,7 +65,7 @@ namespace Erp_Api.Controllers
         public async Task<ActionResult<LoginResponseDTO>> Register([FromBody] RegisterRequestDTO request)
         {
             // Vérifier si l'email existe déjà
-            var existingUser = await _employeManager.GetByEmailAsync(request.Email);
+            var existingUser = await _employeManager.GetByEmailLoginAsync(request.Email);
             if (existingUser != null)
                 return BadRequest(new { message = "Un compte avec cet email existe déjà" });
 
@@ -79,6 +79,7 @@ namespace Erp_Api.Controllers
                 Prenom = request.Prenom,
                 Email = request.Email,
                 PasswordHash = passwordHash,
+                Login = $"{request.Nom[0]}{request.Prenom}".ToLower(),
                 Telephone = request.Telephone,
                 DateNaissance = request.DateNaissance,
                 NumSecuriteSociale = request.NumSecuriteSociale
