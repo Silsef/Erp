@@ -17,11 +17,10 @@ namespace Erp_Blazor.Service.Security
             _http = http;
         }
 
-        // Cette méthode est appelée automatiquement par Blazor pour savoir qui est connecté
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            // 1. On cherche le token dans le stockage local
-            string token = await _localStorage.GetItemAsStringAsync("authToken");
+            // 1. Récupérer le token (sans guillemets)
+            string? token = await _localStorage.GetItemAsStringAsync("authToken");
 
             var identity = new ClaimsIdentity();
             _http.DefaultRequestHeaders.Authorization = null;
@@ -30,14 +29,19 @@ namespace Erp_Blazor.Service.Security
             {
                 try
                 {
+                    // Nettoyer le token des guillemets éventuels
+                    token = token.Replace("\"", "");
+
+                    // 2. Parser les claims du JWT
                     identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
 
-                    // 3. On attache le token aux futures requêtes HTTP
-                    _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("\"", ""));
+                    // 3. Ajouter le token dans les headers HTTP
+                    _http.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", token);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Si le token est corrompu, on l'efface
+                    Console.WriteLine($"Erreur lors du parsing du token : {ex.Message}");
                     await _localStorage.RemoveItemAsync("authToken");
                     identity = new ClaimsIdentity();
                 }
@@ -46,19 +50,59 @@ namespace Erp_Blazor.Service.Security
             var user = new ClaimsPrincipal(identity);
             var state = new AuthenticationState(user);
 
-            // On dit à tout le monde : "Voici l'état actuel de l'utilisateur"
             NotifyAuthenticationStateChanged(Task.FromResult(state));
 
             return state;
         }
 
-        // Méthode utilitaire pour lire le token (standard JWT)
+        // Méthode utilitaire pour extraire les claims du JWT
         public static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
+            var claims = new List<Claim>();
             var payload = jwt.Split('.')[1];
             var jsonBytes = ParseBase64WithoutPadding(payload);
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
-            return keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString()));
+
+            if (keyValuePairs != null)
+            {
+                // Extraire les claims standards
+                foreach (var kvp in keyValuePairs)
+                {
+                    if (kvp.Value != null)
+                    {
+                        // Gérer les différents types de valeurs
+                        var value = kvp.Value.ToString();
+
+                        // Mapper les claims JWT vers les claims .NET
+                        switch (kvp.Key.ToLower())
+                        {
+                            case "email":
+                            case "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress":
+                                claims.Add(new Claim(ClaimTypes.Email, value));
+                                claims.Add(new Claim(ClaimTypes.Name, value)); // Pour affichage dans le layout
+                                break;
+                            case "nom":
+                                claims.Add(new Claim("nom", value));
+                                break;
+                            case "prenom":
+                                claims.Add(new Claim("prenom", value));
+                                break;
+                            case "id":
+                                claims.Add(new Claim(ClaimTypes.NameIdentifier, value));
+                                break;
+                            case "role":
+                            case "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
+                                claims.Add(new Claim(ClaimTypes.Role, value));
+                                break;
+                            default:
+                                claims.Add(new Claim(kvp.Key, value));
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return claims;
         }
 
         private static byte[] ParseBase64WithoutPadding(string base64)
@@ -69,6 +113,15 @@ namespace Erp_Blazor.Service.Security
                 case 3: base64 += "="; break;
             }
             return Convert.FromBase64String(base64);
+        }
+
+        // Méthode pour déconnecter l'utilisateur
+        public async Task MarkUserAsLoggedOut()
+        {
+            await _localStorage.RemoveItemAsync("authToken");
+            var identity = new ClaimsIdentity();
+            var user = new ClaimsPrincipal(identity);
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
     }
 }

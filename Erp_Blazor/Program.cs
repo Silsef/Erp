@@ -1,38 +1,37 @@
-using Blazored.LocalStorage;
+using Erp_Blazor;
 using Erp_Blazor.Service.Security;
 using Erp_Blazor.Service.WebServices;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.LocalStorage;
 
-namespace Erp_Blazor
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// Configuration de l'URL de l'API
+var apiUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7223";
+
+// HttpClient configuré avec l'URL de base
+builder.Services.AddScoped(sp => new HttpClient
 {
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("#app");
-            builder.RootComponents.Add<HeadOutlet>("head::after");
+    BaseAddress = new Uri(apiUrl)
+});
 
-            // Configuration de l'URL de base de l'API
-            var apiBaseUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7223";
+// LocalStorage
+builder.Services.AddBlazoredLocalStorage();
 
-            // HttpClient simple - les cookies sont gérés automatiquement par le navigateur
-            builder.Services.AddScoped(sp => new HttpClient
-            {
-                BaseAddress = new Uri(apiBaseUrl)
-            });
+// Services d'authentification
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<CustomAuthStateProvider>());
 
-            builder.Services.AddBlazoredLocalStorage();
-            builder.Services.AddAuthorizationCore();
+// Ajouter les services d'autorisation
+builder.Services.AddAuthorizationCore();
 
-            // Enregistrer les services
-            builder.Services.AddScoped<AuthService>();
+// Ajouter vos services métier
+builder.Services.AddScoped<EmployeWebService>();
 
-            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-
-            await builder.Build().RunAsync();
-        }
-    }
-}
+await builder.Build().RunAsync();

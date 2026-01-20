@@ -61,9 +61,13 @@
 
             if (result != null)
             {
-                await LocalStorage.SetItemAsync("authToken", result.Prenom);
-                await AuthStateProvider.GetAuthenticationStateAsync();
-                NavigationManager.NavigateTo("/");
+                // CORRECTION : Stocker le TOKEN, pas le prénom !
+                await LocalStorage.SetItemAsync("authToken", result.Token);
+
+                // Forcer la mise à jour de l'état d'authentification
+                await ((CustomAuthStateProvider)AuthStateProvider).GetAuthenticationStateAsync();
+
+                NavigationManager.NavigateTo("/", forceLoad: true);
             }
             else
             {
