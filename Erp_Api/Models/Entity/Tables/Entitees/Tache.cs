@@ -24,6 +24,9 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("tac_datefin")]
         public DateTime DateFin { get; set; }
 
+        [Column("tac_statut")]
+        public StatutTache Statut { get; set; } = StatutTache.AFaire; 
+
         [Column("tac_projet_id")]
         public int? ProjetId { get; set; }
 
@@ -36,7 +39,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int? EmployeAssigneId { get; set; }
 
         [ForeignKey(nameof(EmployeAssigneId))]
-        public Tache? EmployeAssigne { get; set; }
+        public Employe? EmployeAssigne { get; set; }
 
 
         [Column("tac_priorite")]

@@ -36,7 +36,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("emp_numsecuritesociale")]
         [RegularExpression("^[0-9]{15}$", ErrorMessage = "Le numéro de sécurité sociale doit contenir exactement 15 chiffres.")]
         public string NumSecuriteSociale { get; set; } = null!;
-        public ICollection<EmployeEntreprise> EmployeEntreprises { get; set; } = new List<EmployeEntreprise>();
+        public ICollection<EmployeEntite> EmployeEntites { get; set; } = new List<EmployeEntite>();
         public ICollection<A_Pour_Role> Employeroles { get; set; } = new List<A_Pour_Role>();
     }
 }

@@ -28,5 +28,5 @@ public class Adresse
 
     // FK vers Entreprise
     public int? EntrepriseId { get; set; }
-    public Entreprise? Entreprise { get; set; }
+    public Entite? Entite { get; set; }
 }

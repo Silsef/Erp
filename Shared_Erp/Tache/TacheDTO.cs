@@ -1,4 +1,5 @@
 ﻿using Shared_Erp.Employe;
+using Shared_Erp.Enums;
 using Shared_Erp.Projet;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,11 @@ namespace Shared_Erp.Tache
     public class TacheDTO
     {
         public int Id { get; set; }
-        public string Titre { get; set; } = null!;
+        public string Nom { get; set; } = null!;
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public string Statut { get; set; } = null!;
+        public StatutTache Statut { get; set; }
         public int Priorite { get; set; }
         public ProjetDTO? ProjetId { get; set; }
         public EmployeDTO? EmployeAssigne { get; set; }
@@ -27,7 +28,6 @@ namespace Shared_Erp.Tache
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public string Statut { get; set; } = null!;
         public int Priorite { get; set; }
         public int ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }
@@ -38,11 +38,9 @@ namespace Shared_Erp.Tache
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public string Statut { get; set; } = null!;
+        public StatutTache Statut { get; set; }
         public int Priorite { get; set; }
         public int ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }
     }
-
-
     }

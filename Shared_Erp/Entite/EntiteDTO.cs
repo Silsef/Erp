@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared_Erp.Entreprise
+namespace Shared_Erp.Entite
 {
-    public class EntrepriseDTO
+    public class EntiteDTO
     {
         public int Id { get; set; }
         public string Nom { get; set; } = null!;
@@ -15,14 +15,14 @@ namespace Shared_Erp.Entreprise
 
     }
 
-    public class EntrepriseCreateDTO
+    public class EntiteCreateDTO
     {
         public string Nom { get; set; } = null!;
         public string? Telephone { get; set; }
         public bool EstEntreprise { get; set; } = true;
     }
 
-    public class EntrepriseUpdateDTO
+    public class EntiteUpdateDTO
     {
         public int Id { get; set; }
         public string Nom { get; set; } = null!;

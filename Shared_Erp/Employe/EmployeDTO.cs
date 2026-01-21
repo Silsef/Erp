@@ -18,6 +18,6 @@ namespace Shared_Erp.Employe
         public string NumSecuriteSociale { get; set; } = null!;
         public AdresseDTO? Adresse { get; set; }
 
-        public List<EmployeEntrepriseDTO> EmployeEntreprises { get; set; } = new List<EmployeEntrepriseDTO>();
+        public List<EmployeEntiteDTO> EmployeEntites { get; set; } = new List<EmployeEntiteDTO>();
     }
 }

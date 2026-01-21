@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Erp_Api.Models.Repository.Managers.Models_Managers
 {
-    public class EntrepriseManager : BaseManager<Entreprise, string>, IEntrepriseRepository
+    public class EntiteManager : BaseManager<Entite, string>, IEntiteRepository
     {
-        public EntrepriseManager(ErpBdContext context) : base(context)
+        public EntiteManager(ErpBdContext context) : base(context)
         {
         }
 
-        public override async Task<Entreprise?> GetByNameAsync(string name)
+        public override async Task<Entite?> GetByNameAsync(string name)
         {
             return await dbSet.FirstOrDefaultAsync(e => e.Nom == name);
         }

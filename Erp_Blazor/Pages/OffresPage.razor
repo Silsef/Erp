@@ -34,7 +34,6 @@
                         <div class="item offre-item @(IsOffreFiltered(offre.Id) ? "filtered" : "") @(selectedOffreId == offre.Id ? "selected" : "")"
                              @onclick="() => SelectOffre(offre.Id)">
                             <div class="item-title">@offre.Titre</div>
-                            <div class="item-subtitle">@offre.NomEntreprise</div>
                             <div class="item-meta">
                                 <span class="badge bg-info">@offre.TypeContratLibelle</span>
                                 @if (offre.SalaireMin.HasValue || offre.SalaireMax.HasValue)

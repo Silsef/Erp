@@ -8,7 +8,7 @@ using Shared_Erp.Employe;
 using Shared_Erp.Entretien;
 using Shared_Erp.Offre;
 using Shared_Erp.Candidature;
-using Shared_Erp.Entreprise;
+using Shared_Erp.Entite;
 using Shared_Erp.Projet;
 using Shared_Erp.Tache;
 
@@ -19,20 +19,19 @@ namespace Erp_Api.Mapper
         public MapperProfile()
         {
             CreateMap<Employe, EmployeDTO>()
-                .ForMember(d => d.EmployeEntreprises, opt=>opt.MapFrom(src=>src.EmployeEntreprises))
+                .ForMember(d => d.EmployeEntites, opt=>opt.MapFrom(src=>src.EmployeEntites))
                 .ReverseMap();
 
-            CreateMap<EmployeEntreprise, EmployeEntrepriseDTO>()
-                .ForMember(dest => dest.NomEntreprise, opt => opt.MapFrom(src => src.Entreprise.Nom))
-                .ForMember(dest => dest.Telephone, opt => opt.MapFrom(src => src.Entreprise.Telephone))
-                .ForMember(dest => dest.Adresse, opt => opt.MapFrom(src => src.Entreprise.Adresse));
+            CreateMap<EmployeEntite, EmployeEntiteDTO>()
+                .ForMember(dest => dest.NomEntreprise, opt => opt.MapFrom(src => src.Entite.Nom))
+                .ForMember(dest => dest.Telephone, opt => opt.MapFrom(src => src.Entite.Telephone))
+                .ForMember(dest => dest.Adresse, opt => opt.MapFrom(src => src.Entite.Adresse));
             CreateMap<Adresse, AdresseDTO>().ReverseMap();
 
-            CreateMap<Entreprise, EntrepriseDTO>().ReverseMap();
+            CreateMap<Entite, EntiteDTO>().ReverseMap();
 
             // Offre mappings
             CreateMap<Offre, OffreDTO>()
-                .ForMember(d => d.NomEntreprise, opt => opt.MapFrom(src => src.Entreprise != null ? src.Entreprise.Nom : null))
                 .ForMember(d => d.TypeContratLibelle, opt => opt.MapFrom(src => src.TypeContrat.Libelle));
             CreateMap<OffreCreateDTO, Offre>();
             CreateMap<OffreUpdateDTO, Offre>();
@@ -53,9 +52,9 @@ namespace Erp_Api.Mapper
             CreateMap<EntretienCreateDTO, Entretien>();
             CreateMap<EntretienUpdateDTO, Entretien>();
 
-            CreateMap<Entreprise,EntrepriseDTO>().ReverseMap();
-            CreateMap<Entreprise,EntrepriseCreateDTO>().ReverseMap();
-            CreateMap<Entreprise,EntrepriseUpdateDTO>().ReverseMap();
+            CreateMap<Entite, EntiteDTO>().ReverseMap();
+            CreateMap<Entite, EntiteCreateDTO>().ReverseMap();
+            CreateMap<Entite, EntiteUpdateDTO>().ReverseMap();
 
             CreateMap<Projet, ProjetDTO>().ReverseMap();
             CreateMap<Projet, ProjetCreateDTO>().ReverseMap();
@@ -63,7 +62,7 @@ namespace Erp_Api.Mapper
 
             CreateMap<Tache, TacheDTO>()
                 .ForMember(d => d.ProjetId, opt => opt.MapFrom(src => src.Projet))
-                .ForMember(d => d.EmployeAssigne, opt => opt.Ignore())
+                .ForMember(d => d.EmployeAssigne, opt => opt.MapFrom(src => src.EmployeAssigne))
                 .ReverseMap();
         }
     }

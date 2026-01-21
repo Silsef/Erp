@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erp_Api.Migrations
 {
     [DbContext(typeof(ErpBdContext))]
-    [Migration("20260120143716_correctionfk_ajout_offre_typecontrat_status_plateforme_et_typeentrerien")]
-    partial class correctionfk_ajout_offre_typecontrat_status_plateforme_et_typeentrerien
+    [Migration("20260121153605_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -111,7 +111,7 @@ namespace Erp_Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("can_offre_emploi_id");
 
-                    b.Property<int>("PlateformeId")
+                    b.Property<int?>("PlateformeId")
                         .HasColumnType("integer")
                         .HasColumnName("can_plateforme_id");
 
@@ -124,7 +124,10 @@ namespace Erp_Api.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("can_pretentions_salariales");
 
-                    b.Property<int>("StatusId")
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StatusId")
                         .HasColumnType("integer")
                         .HasColumnName("can_status_id");
 
@@ -139,8 +142,6 @@ namespace Erp_Api.Migrations
                     b.HasIndex("OffreEmploiId");
 
                     b.HasIndex("PlateformeId");
-
-                    b.HasIndex("StatusId");
 
                     b.ToTable("t_e_candidature_can", "erp");
                 });
@@ -206,6 +207,10 @@ namespace Erp_Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("EstEntreprise")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ent_est_entreprise");
+
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasColumnType("text")
@@ -258,6 +263,81 @@ namespace Erp_Api.Migrations
                     b.HasIndex("TypeEntretienId");
 
                     b.ToTable("t_e_entretien_ent", "erp");
+                });
+
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.FeuilleTemps", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("ft_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Commentaire")
+                        .HasColumnType("text")
+                        .HasColumnName("ft_commentaire");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ft_date");
+
+                    b.Property<int>("EmployeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ft_employe_id");
+
+                    b.Property<bool>("EstMatin")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ft_est_matin");
+
+                    b.Property<bool>("EstPresent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ft_est_present");
+
+                    b.Property<int?>("ProjetId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ft_projet_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeId");
+
+                    b.HasIndex("ProjetId");
+
+                    b.ToTable("t_e_feuilletemps_ft", "erp");
+                });
+
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Materiel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("mat_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("mat_nom");
+
+                    b.Property<int?>("ProjetId")
+                        .HasColumnType("integer")
+                        .HasColumnName("mat_projet_id");
+
+                    b.Property<int>("Quantite")
+                        .HasColumnType("integer")
+                        .HasColumnName("mat_quantite");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("mat_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjetId");
+
+                    b.ToTable("t_e_materiel_mat", "erp");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Offre", b =>
@@ -339,6 +419,53 @@ namespace Erp_Api.Migrations
                     b.ToTable("t_e_plateforme_pla", "erp");
                 });
 
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Projet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("pro_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateDebut")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pro_date_debut");
+
+                    b.Property<DateTime?>("DateFin")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pro_date_fin");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("pro_description");
+
+                    b.Property<int?>("EntrepriseClienteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pro_entrepriseclient_id");
+
+                    b.Property<int?>("EntrepriseRealisatriceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pro_entreprise_id");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pro_nom");
+
+                    b.Property<int>("Priorite")
+                        .HasColumnType("integer")
+                        .HasColumnName("pro_priorite");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntrepriseClienteId");
+
+                    b.HasIndex("EntrepriseRealisatriceId");
+
+                    b.ToTable("t_e_projet_pro", "erp");
+                });
+
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -358,23 +485,62 @@ namespace Erp_Api.Migrations
                     b.ToTable("t_e_role_rol", "erp");
                 });
 
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Status", b =>
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("sta_id");
+                        .HasColumnName("tac_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Libelle")
+                    b.Property<DateTime>("DateDebut")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("tac_datedebut");
+
+                    b.Property<DateTime>("DateFin")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("tac_datefin");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("sta_libelle");
+                        .HasColumnName("tac_Description");
+
+                    b.Property<int?>("EmployeAssigneId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tacemployeassigne_id");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tac_nom");
+
+                    b.Property<int>("Priorite")
+                        .HasColumnType("integer")
+                        .HasColumnName("tac_priorite");
+
+                    b.Property<int?>("ProjetId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tac_projet_id");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("integer")
+                        .HasColumnName("tac_statut");
+
+                    b.Property<int?>("TacheParenteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tac_tache_parente_id");
 
                     b.HasKey("Id");
 
-                    b.ToTable("t_e_status_sta", "erp");
+                    b.HasIndex("EmployeAssigneId");
+
+                    b.HasIndex("ProjetId");
+
+                    b.HasIndex("TacheParenteId");
+
+                    b.ToTable("t_e_tache_tac", "erp");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.TypeContrat", b =>
@@ -492,23 +658,13 @@ namespace Erp_Api.Migrations
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Plateforme", "Plateforme")
                         .WithMany("Candidature")
-                        .HasForeignKey("PlateformeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Status", "Status")
-                        .WithMany("Candidatures")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("PlateformeId");
 
                     b.Navigation("Employe");
 
                     b.Navigation("Offre");
 
                     b.Navigation("Plateforme");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Entretien", b =>
@@ -536,6 +692,32 @@ namespace Erp_Api.Migrations
                     b.Navigation("TypeEntretien");
                 });
 
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.FeuilleTemps", b =>
+                {
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Employe", "Employe")
+                        .WithMany()
+                        .HasForeignKey("EmployeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Projet", "Projet")
+                        .WithMany()
+                        .HasForeignKey("ProjetId");
+
+                    b.Navigation("Employe");
+
+                    b.Navigation("Projet");
+                });
+
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Materiel", b =>
+                {
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Projet", "Projet")
+                        .WithMany()
+                        .HasForeignKey("ProjetId");
+
+                    b.Navigation("Projet");
+                });
+
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Offre", b =>
                 {
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entreprise", "Entreprise")
@@ -551,6 +733,46 @@ namespace Erp_Api.Migrations
                     b.Navigation("Entreprise");
 
                     b.Navigation("TypeContrat");
+                });
+
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Projet", b =>
+                {
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entreprise", "EntrepriseCliente")
+                        .WithMany("ProjetsCommandes")
+                        .HasForeignKey("EntrepriseClienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entreprise", "EntrepriseRealisatrice")
+                        .WithMany("ProjetsRealises")
+                        .HasForeignKey("EntrepriseRealisatriceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EntrepriseCliente");
+
+                    b.Navigation("EntrepriseRealisatrice");
+                });
+
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
+                {
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Employe", "EmployeAssigne")
+                        .WithMany()
+                        .HasForeignKey("EmployeAssigneId");
+
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Projet", "Projet")
+                        .WithMany("Taches")
+                        .HasForeignKey("ProjetId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Tache", "TacheParente")
+                        .WithMany("SousTaches")
+                        .HasForeignKey("TacheParenteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EmployeAssigne");
+
+                    b.Navigation("Projet");
+
+                    b.Navigation("TacheParente");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Jointures.A_Pour_Role", b =>
@@ -605,6 +827,10 @@ namespace Erp_Api.Migrations
                     b.Navigation("Adresse");
 
                     b.Navigation("EmployeEntreprises");
+
+                    b.Navigation("ProjetsCommandes");
+
+                    b.Navigation("ProjetsRealises");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Offre", b =>
@@ -617,14 +843,19 @@ namespace Erp_Api.Migrations
                     b.Navigation("Candidature");
                 });
 
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Projet", b =>
+                {
+                    b.Navigation("Taches");
+                });
+
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Role", b =>
                 {
                     b.Navigation("EmployeRoles");
                 });
 
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Status", b =>
+            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
-                    b.Navigation("Candidatures");
+                    b.Navigation("SousTaches");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.TypeContrat", b =>

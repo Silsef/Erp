@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Shared_Erp.Enums;
 
 namespace Erp_Api.Models.Entity.Tables.Entitees
 {
@@ -47,7 +48,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         [Column("can_status_id")]
         public int? StatusId { get; set; }
-        public Status? Status { get; set; }
+        public Statut? Status { get; set; } =Statut.EnAttente;
 
         [Column("can_plateforme_id")]
         public int? PlateformeId { get; set; }

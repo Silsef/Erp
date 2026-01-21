@@ -57,7 +57,7 @@ builder.Services.AddScoped<OffreManager>();
 builder.Services.AddScoped<CandidatureManager>();
 builder.Services.AddScoped<EntretienManager>();
 builder.Services.AddScoped<ProjetManager>();
-builder.Services.AddScoped<EntrepriseManager>();
+builder.Services.AddScoped<EntiteManager>();
 builder.Services.AddScoped<TacheManager>();
 
 // Configuration JWT Authentication

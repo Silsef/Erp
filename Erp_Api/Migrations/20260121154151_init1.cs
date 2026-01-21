@@ -5,27 +5,27 @@
 namespace Erp_Api.Migrations
 {
     /// <inheritdoc />
-    public partial class ajoutmdp : Migration
+    public partial class init1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "emp_password_hash",
+            migrationBuilder.AddColumn<bool>(
+                name: "ent_est_silsefnapa",
                 schema: "erp",
-                table: "t_e_employe_emp",
-                type: "text",
+                table: "t_e_entreprise_ent",
+                type: "boolean",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "emp_password_hash",
+                name: "ent_est_silsefnapa",
                 schema: "erp",
-                table: "t_e_employe_emp");
+                table: "t_e_entreprise_ent");
         }
     }
 }

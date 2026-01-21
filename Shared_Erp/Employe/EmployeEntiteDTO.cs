@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Shared_Erp.Employe
 {
-    public class EmployeEntrepriseDTO
+    public class EmployeEntiteDTO
     {
         public int EmployeId { get; set; }
         public int EntrepriseId { get; set; }

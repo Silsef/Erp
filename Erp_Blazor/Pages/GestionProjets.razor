@@ -1,9 +1,9 @@
 ﻿@page "/projets"
+@using Shared_Erp.Entite
 @using Shared_Erp.Enums
 @using Shared_Erp.Tache
 @inject IProjetService ProjetService
-@inject IEntrepriseService EntrepriseService
-@* Assurez-vous d'avoir le bon namespace pour l'enum, ou déplacez l'enum dans Shared_Erp *@
+@inject IEntiteService EntiteService
 @attribute [Authorize]
 
 <h3>Gestion des Projets</h3>
@@ -93,7 +93,7 @@
                     {
                         <div>
                             <div class="" @onclick="() => SelectTache(tache)">
-                                @tache.Titre @tache.EmployeAssigne.Nom
+                                @tache.Nom @tache.EmployeAssigne.Nom
                             </div>
                         </div>
                     }
@@ -153,7 +153,7 @@
                             <label class="form-label">Entreprise Réalisatrice</label>
                             <select class="form-select" @bind="NewProjet.EntrepriseRealisatriceId">
                                 <option value="">-- Sélectionner une entreprise --</option>
-                                @foreach (var ent in Entreprises)
+                                @foreach (var ent in Entites)
                                 {
                                     <option value="@ent.Id">@ent.Nom</option>
                                 }
@@ -164,7 +164,7 @@
                             <label class="form-label">Entreprise Cliente</label>
                             <select class="form-select" @bind="NewProjet.EntrepriseClienteId">
                                 <option value="">-- Sélectionner une entreprise --</option>
-                                @foreach (var ent in Entreprises)
+                                @foreach (var ent in Entites)
                                 {
                                     <option value="@ent.Id">@ent.Nom</option>
                                 }
@@ -184,7 +184,7 @@
 
 @code {
     private List<ProjetDTO> Projets = new List<ProjetDTO>();
-    private List<EntrepriseDTO> Entreprises = new List<EntrepriseDTO>();
+    private List<EntiteDTO> Entites = new List<EntiteDTO>();
 
     private ProjetDTO? SelectedProjet;
     private TacheDTO? SelectedTache;
@@ -195,7 +195,7 @@
     protected override async Task OnInitializedAsync()
     {
         Projets = await ProjetService.GetAll();
-        Entreprises = await EntrepriseService.GetAll();
+        Entites = await EntiteService.GetAll();
 
         NewProjet.DateDebut = DateTime.Now;
         NewProjet.Priorite = (int)NiveauPriorite.Normale;

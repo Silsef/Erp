@@ -14,13 +14,12 @@ namespace Erp_Api.Models.Entity
         {
         }
         public DbSet<Employe> Employes { get; set; }
-        public DbSet<Entreprise> Entreprises { get; set; }
-        public DbSet<EmployeEntreprise> EmployeEntreprises { get; set; }
+        public DbSet<Entite> Entites { get; set; }
+        public DbSet<EmployeEntite> EmployeEntites { get; set; }
         public DbSet<Adresse> Adresses { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<A_Pour_Role> A_Pour_Roles { get; set; }
         public DbSet<Candidature> Candidatures { get; set; }
-        public DbSet<Status> Statuses { get; set; }
         public DbSet<Offre> Offres { get; set; }
         public DbSet<TypeContrat> TypeContrats { get; set; }
         public DbSet<Entretien> Entretiens { get; set; }
@@ -41,25 +40,25 @@ namespace Erp_Api.Models.Entity
                 .HasForeignKey<Adresse>(a => a.EmployeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Entreprise>()
+            modelBuilder.Entity<Entite>()
                 .HasOne(e => e.Adresse)
-                .WithOne(a => a.Entreprise)
+                .WithOne(a => a.Entite)
                 .HasForeignKey<Adresse>(a => a.EntrepriseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<EmployeEntreprise>()
-                .HasKey(ee => new { ee.EmployeId, ee.EntrepriseId });
+            modelBuilder.Entity<EmployeEntite>()
+                .HasKey(ee => new { ee.EmployeId, ee.Entite });
 
-            modelBuilder.Entity<EmployeEntreprise>()
+            modelBuilder.Entity<EmployeEntite>()
                 .HasOne(ee => ee.Employe)
-                .WithMany(e => e.EmployeEntreprises)
+                .WithMany(e => e.EmployeEntites)
                 .HasForeignKey(ee => ee.EmployeId)
                 .OnDelete(DeleteBehavior.Cascade);
                 
-            modelBuilder.Entity<EmployeEntreprise>()
-                .HasOne(ee => ee.Entreprise)
-                .WithMany(e => e.EmployeEntreprises)
-                .HasForeignKey(ee => ee.EntrepriseId)
+            modelBuilder.Entity<EmployeEntite>()
+                .HasOne(ee => ee.Entite)
+                .WithMany(e => e.EmployeEntites)
+                .HasForeignKey(ee => ee.EntiteId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<A_Pour_Role>()
@@ -76,12 +75,6 @@ namespace Erp_Api.Models.Entity
                 .WithMany(r => r.EmployeRoles)
                 .HasForeignKey(apr => apr.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Candidature>()
-                .HasOne(c => c.Status)
-                .WithMany(s => s.Candidatures)
-                .HasForeignKey(c => c.StatusId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // Offre -> TypeContrat
             modelBuilder.Entity<Offre>()
@@ -104,13 +97,13 @@ namespace Erp_Api.Models.Entity
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Projet>()
-                .HasOne(p => p.EntrepriseRealisatrice)
+                .HasOne(p => p.EntiteRealisatrice)
                 .WithMany(e => e.ProjetsRealises)
                 .HasForeignKey(p => p.EntrepriseRealisatriceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Projet>()
-                .HasOne(p => p.EntrepriseCliente)
+                .HasOne(p => p.EntiteCliente)
                 .WithMany(e => e.ProjetsCommandes)
                 .HasForeignKey(p => p.EntrepriseClienteId)
                 .OnDelete(DeleteBehavior.Restrict);

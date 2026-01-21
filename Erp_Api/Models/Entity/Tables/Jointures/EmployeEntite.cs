@@ -4,16 +4,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Erp_Api.Models.Entity.Tables.Jointures
 {
-    [Table("t_j_employe_entreprise_eem")]
-    public class EmployeEntreprise
+    [Table("t_j_employe_entite_eem")]
+    public class EmployeEntite
     {
         [Column("eem_employe_id")]
         [ForeignKey(nameof(Employe))]
         public int EmployeId { get; set; }
 
-        [Column("eem_entreprise_id")]
-        [ForeignKey(nameof(Entreprise))]
-        public int EntrepriseId { get; set; }
+        [Column("eem_Entite_id")]
+        [ForeignKey(nameof(Entite))]
+        public int EntiteId { get; set; }
 
         [Column("eem_date_debut")]
         public DateTime DateDebut { get; set; }
@@ -26,6 +26,6 @@ namespace Erp_Api.Models.Entity.Tables.Jointures
 
         // Navigation properties
         public Employe Employe { get; set; } = null!;
-        public Entreprise Entreprise { get; set; } = null!;
+        public Entite Entite { get; set; } = null!;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Shared_Erp.Enums;
 using Shared_Erp.Employe;
-using Shared_Erp.Entreprise;
+using Shared_Erp.Entite;
 using Shared_Erp.Enums;
 using Shared_Erp.Tache;
 using System;
@@ -19,8 +19,8 @@ namespace Shared_Erp.Projet
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public EntrepriseDTO? EntrepriseRealisatrice { get; set; }
-        public EntrepriseDTO? EntrepriseCliente { get; set; }
+        public EntiteDTO? EntrepriseRealisatrice { get; set; }
+        public EntiteDTO? EntrepriseCliente { get; set; }
         public NiveauPriorite Priorite { get; set; }
         public List<TacheDTO> Taches { get; set; } = new List<TacheDTO>();
 

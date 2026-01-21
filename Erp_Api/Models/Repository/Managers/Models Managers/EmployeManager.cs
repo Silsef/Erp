@@ -19,7 +19,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
 
         public override async Task<Employe?> GetByIdAsync(int id)
         {
-            return await dbSet.Include(c => c.EmployeEntreprises).ThenInclude(c => c.Entreprise).Include(r=> r.Employeroles).ThenInclude(a=>a.Role).FirstOrDefaultAsync(c => c.Id == id);
+            return await dbSet.Include(c => c.EmployeEntites).ThenInclude(c => c.Entite).Include(r=> r.Employeroles).ThenInclude(a=>a.Role).FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Employe?> GetByEmailLoginAsync(string email)

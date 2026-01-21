@@ -121,6 +121,9 @@ namespace Erp_Api.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("can_pretentions_salariales");
 
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("StatusId")
                         .HasColumnType("integer")
                         .HasColumnName("can_status_id");
@@ -136,8 +139,6 @@ namespace Erp_Api.Migrations
                     b.HasIndex("OffreEmploiId");
 
                     b.HasIndex("PlateformeId");
-
-                    b.HasIndex("StatusId");
 
                     b.ToTable("t_e_candidature_can", "erp");
                 });
@@ -206,6 +207,10 @@ namespace Erp_Api.Migrations
                     b.Property<bool>("EstEntreprise")
                         .HasColumnType("boolean")
                         .HasColumnName("ent_est_entreprise");
+
+                    b.Property<bool>("EstSilsefNapa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ent_est_silsefnapa");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -481,25 +486,6 @@ namespace Erp_Api.Migrations
                     b.ToTable("t_e_role_rol", "erp");
                 });
 
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Status", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("sta_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Libelle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("sta_libelle");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("t_e_status_sta", "erp");
-                });
-
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
                     b.Property<int>("Id")
@@ -509,20 +495,26 @@ namespace Erp_Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DateDebut")
-                        .HasColumnType("integer")
+                    b.Property<DateTime>("DateDebut")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("tac_datedebut");
 
-                    b.Property<int>("DateFin")
-                        .HasColumnType("integer")
+                    b.Property<DateTime>("DateFin")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("tac_datefin");
 
-                    b.Property<int>("Description")
-                        .HasColumnType("integer")
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("tac_Description");
 
-                    b.Property<int>("Nom")
+                    b.Property<int?>("EmployeAssigneId")
                         .HasColumnType("integer")
+                        .HasColumnName("tacemployeassigne_id");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("tac_nom");
 
                     b.Property<int>("Priorite")
@@ -533,11 +525,17 @@ namespace Erp_Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("tac_projet_id");
 
+                    b.Property<int>("Statut")
+                        .HasColumnType("integer")
+                        .HasColumnName("tac_statut");
+
                     b.Property<int?>("TacheParenteId")
                         .HasColumnType("integer")
                         .HasColumnName("tac_tache_parente_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeAssigneId");
 
                     b.HasIndex("ProjetId");
 
@@ -663,18 +661,11 @@ namespace Erp_Api.Migrations
                         .WithMany("Candidature")
                         .HasForeignKey("PlateformeId");
 
-                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Status", "Status")
-                        .WithMany("Candidatures")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Employe");
 
                     b.Navigation("Offre");
 
                     b.Navigation("Plateforme");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Entretien", b =>
@@ -764,6 +755,10 @@ namespace Erp_Api.Migrations
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
+                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Employe", "EmployeAssigne")
+                        .WithMany()
+                        .HasForeignKey("EmployeAssigneId");
+
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Projet", "Projet")
                         .WithMany("Taches")
                         .HasForeignKey("ProjetId")
@@ -773,6 +768,8 @@ namespace Erp_Api.Migrations
                         .WithMany("SousTaches")
                         .HasForeignKey("TacheParenteId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EmployeAssigne");
 
                     b.Navigation("Projet");
 
@@ -855,11 +852,6 @@ namespace Erp_Api.Migrations
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Role", b =>
                 {
                     b.Navigation("EmployeRoles");
-                });
-
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Status", b =>
-                {
-                    b.Navigation("Candidatures");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>

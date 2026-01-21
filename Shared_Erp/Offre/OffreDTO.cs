@@ -18,7 +18,6 @@ namespace Shared_Erp.Offre
         public bool EstActive { get; set; }
         public int NombrePostes { get; set; }
         public int? EntrepriseId { get; set; }
-        public string? NomEntreprise { get; set; }
         public int TypeContratId { get; set; }
         public string? TypeContratLibelle { get; set; }
     }

@@ -14,7 +14,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
         {
             return await dbSet
                 .Include(o => o.TypeContrat)
-                .Include(o => o.Entreprise)
+                .Include(o => o.Entite)
                 .FirstOrDefaultAsync(o => o.Titre == name);
         }
 
@@ -22,7 +22,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
         {
             return await dbSet
                 .Include(o => o.TypeContrat)
-                .Include(o => o.Entreprise)
+                .Include(o => o.Entite)
                 .Include(o => o.Candidatures)
                 .OrderByDescending(o => o.DatePublication)
                 .ToListAsync();
@@ -32,7 +32,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
         {
             return await dbSet
                 .Include(o => o.TypeContrat)
-                .Include(o => o.Entreprise)
+                .Include(o => o.Entite)
                 .Include(o => o.Candidatures)
                 .FirstOrDefaultAsync(o => o.Id == id);
         }

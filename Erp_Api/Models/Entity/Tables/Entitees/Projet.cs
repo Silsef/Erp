@@ -26,11 +26,11 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         [Column("pro_entreprise_id")]
         public int? EntrepriseRealisatriceId { get; set; }
-        public Entreprise? EntrepriseRealisatrice { get; set; }
+        public Entite? EntiteRealisatrice { get; set; }
 
         [Column("pro_entrepriseclient_id")]
         public int? EntrepriseClienteId { get; set; }
-        public Entreprise? EntrepriseCliente { get; set; }
+        public Entite? EntiteCliente { get; set; }
 
         [Column("pro_priorite")]
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;

@@ -35,10 +35,9 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("off_nombre_postes")]
         public int NombrePostes { get; set; } = 1;
 
-        // Foreign Key vers Entreprise
-        [Column("off_entreprise_id")]
+        [Column("off_entite_id")]
         public int? EntrepriseId { get; set; }
-        public Entreprise? Entreprise { get; set; }
+        public Entite? Entite { get; set; }
 
         // 🔽 FK TypeContrat
         [Column("off_type_contrat_id")]

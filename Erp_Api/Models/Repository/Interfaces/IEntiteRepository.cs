@@ -1,6 +1,6 @@
 ﻿namespace Erp_Api.Models.Repository.Interfaces
 {
-    public interface IEntrepriseRepository
+    public interface IEntiteRepository
     {
     }
 }
