@@ -20,10 +20,53 @@
             </NavLink>
         </div>
     </nav>
+
+    <div class="arborescence">
+
+        <div class="gestiontech">
+
+            <div class="title">
+                <p>Gestion Technique</p>
+            </div>
+
+
+            <div class="gestionproj">
+                <p>Gestion Projet</p>
+            </div>
+
+        </div>
+
+        <div class="gestionadmin">
+                
+            <div class="title">
+                <p>Gestion Admin</p>
+            </div>
+
+
+            @if(ExpendAdminMenu){
+
+            <div>
+                <p>Gestion Comptabilite</p>
+            </div>
+
+            <div>
+                <p>Gestion RH</p>
+            </div>
+            }
+
+        </div>
+
+    </div>
+
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+
+    private bool ExpendTechMenu = false;
+    private bool ExpendAdminMenu = false;
+    private bool ExpendProjetMenu = false;
+
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -31,4 +74,19 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    private void ToggleTechMenu()
+    {
+        ExpendTechMenu = !ExpendTechMenu;
+    }
+
+    private void ToggleAdminMenu()
+    {
+        ExpendAdminMenu = !ExpendAdminMenu;
+    }
+    private void ToggleProjetMenu()
+    {
+        ExpendProjetMenu = !ExpendProjetMenu;
+    }
+
 }
