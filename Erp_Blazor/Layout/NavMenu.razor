@@ -19,54 +19,70 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Connexion
             </NavLink>
         </div>
-    </nav>
 
-    <div class="arborescence">
+        <div class="nav-item px-3">
 
-        <div class="gestiontech">
-
-            <div class="title">
-                <p>Gestion Technique</p>
+            <div class="nav-link clickable-title" @onclick="ToggleTechMenu">
+                <span class="bi bi-wrench" aria-hidden="true"></span> <span class="flex-grow-1">Gestion Technique</span>
+                <span class="arrow">@(ExpendTechMenu ? "▼" : "▶")</span>
             </div>
 
+            @if (ExpendTechMenu)
+            {
+                <div class="sub-menu">
+                    <div class="nav-link clickable-subtitle" @onclick="ToggleProjetMenu">
+                        <span class="flex-grow-1">Gestion Projet</span>
+                        <span class="arrow">@(ExpendProjetMenu ? "▼" : "▶")</span>
+                    </div>
 
-            <div class="gestionproj">
-                <p>Gestion Projet</p>
-            </div>
+                    @if (ExpendProjetMenu)
+                    {
+                        <div class="sub-sub-menu">
+                            <NavLink class="nav-link" href="projets">
+                                <span class="small-icon">📄</span> Liste des projets
+                            </NavLink>
+                            <NavLink class="nav-link" href="projets/nouveau">
+                                <span class="small-icon">➕</span> Nouveau projet
+                            </NavLink>
+                        </div>
+                    }
 
-        </div>
-
-        <div class="gestionadmin">
-                
-            <div class="title">
-                <p>Gestion Admin</p>
-            </div>
-
-
-            @if(ExpendAdminMenu){
-
-            <div>
-                <p>Gestion Comptabilite</p>
-            </div>
-
-            <div>
-                <p>Gestion RH</p>
-            </div>
+                    <NavLink class="nav-link" href="tech/dashboard">
+                        <span class="small-icon">📊</span> Dashboard Tech
+                    </NavLink>
+                </div>
             }
 
+            <div class="nav-link clickable-title mt-2" @onclick="ToggleAdminMenu">
+                <span class="bi bi-person-badge" aria-hidden="true"></span>
+                <span class="flex-grow-1">Gestion Admin</span>
+                <span class="arrow">@(ExpendAdminMenu ? "▼" : "▶")</span>
+            </div>
+
+            @if (ExpendAdminMenu)
+            {
+                <div class="sub-menu">
+                    <NavLink class="nav-link" href="ressourceshumaines">
+                        <span class="small-icon">👥</span> Gestion RH
+                    </NavLink>
+
+                    <NavLink class="nav-link" href="compta">
+                        <span class="small-icon">💰</span> Gestion Comptabilité
+                    </NavLink>
+                </div>
+            }
         </div>
 
-    </div>
-
+    </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
 
+    // Tes booléens pour gérer l'état ouvert/fermé
     private bool ExpendTechMenu = false;
     private bool ExpendAdminMenu = false;
     private bool ExpendProjetMenu = false;
-
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -75,6 +91,7 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
+    // Tes méthodes pour basculer l'état
     private void ToggleTechMenu()
     {
         ExpendTechMenu = !ExpendTechMenu;
@@ -84,9 +101,9 @@
     {
         ExpendAdminMenu = !ExpendAdminMenu;
     }
+
     private void ToggleProjetMenu()
     {
         ExpendProjetMenu = !ExpendProjetMenu;
     }
-
 }
