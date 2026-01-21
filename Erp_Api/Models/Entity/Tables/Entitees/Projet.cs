@@ -1,0 +1,37 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Erp_Api.Models.Entity.Tables.Entitees
+{
+    [Table("t_e_projet_pro")]
+    public class Projet
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("pro_id")]
+        public int Id { get; set; }
+
+        [Column("pro_nom")]
+        public string Nom { get; set; } = null!;
+
+        [Column("pro_description")]
+        public string? Description { get; set; }
+
+        [Column("pro_date_debut")]
+        public DateTime DateDebut { get; set; }
+
+        [Column("pro_date_fin")]
+        public DateTime? DateFin { get; set; }
+
+        [Column("pro_entreprise_id")]
+        public int? EntrepriseRealisatriceId { get; set; }
+        public Entreprise? EntrepriseRealisatrice { get; set; }
+
+        [Column("pro_entrepriseclient_id")]
+        public int? EntrepriseClienteId { get; set; }
+        public Entreprise? EntrepriseCliente { get; set; }
+
+
+
+    }
+}

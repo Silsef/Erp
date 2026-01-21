@@ -26,6 +26,7 @@ namespace Erp_Api.Models.Entity
         public DbSet<Entretien> Entretiens { get; set; }
         public DbSet<TypeEntretien> TypeEntretiens { get; set; }
         public DbSet<Plateforme> Plateformes { get; set; }
+        public DbSet<Projet> Projets { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -97,7 +98,19 @@ namespace Erp_Api.Models.Entity
                 .HasOne(c => c.Offre)
                 .WithMany(o => o.Candidatures)
                 .HasForeignKey(c => c.OffreEmploiId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Projet>()
+                .HasOne(p => p.EntrepriseRealisatrice)
+                .WithMany(e => e.ProjetsRealises)
+                .HasForeignKey(p => p.EntrepriseRealisatriceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Projet>()
+                .HasOne(p => p.EntrepriseCliente)
+                .WithMany(e => e.ProjetsCommandes)
+                .HasForeignKey(p => p.EntrepriseClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             OnModelCreatingPartial(modelBuilder);
 
