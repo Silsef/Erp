@@ -8,7 +8,7 @@ namespace Erp_Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize]
+    [AllowAnonymous]
     public abstract class BaseController<TEntity, TDto, TCreateDto, TUpdateDto, TKey> : ControllerBase
         where TEntity : class
         where TDto : class

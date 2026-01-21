@@ -81,7 +81,7 @@ namespace Erp_Api.Controllers
             emp.Nom = request.Nom;
             emp.Prenom = request.Prenom;
             emp.PasswordHash = passwordHash;
-            emp.Login = $"{request.Nom[0]}{request.Prenom}".ToLower();
+            emp.Login = $"{request.Nom}{request.Prenom[0]}".ToLower();
             emp.DateNaissance = request.DateNaissance;
             emp.NumSecuriteSociale = request.NumSecuriteSociale;
             emp.Telephone = request.Telephone;

@@ -8,6 +8,7 @@ using Shared_Erp.Employe;
 using Shared_Erp.Entretien;
 using Shared_Erp.Offre;
 using Shared_Erp.Candidature;
+using Shared_Erp.Entreprise;
 
 namespace Erp_Api.Mapper
 {

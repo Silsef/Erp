@@ -1,4 +1,5 @@
 ﻿using Shared_Erp.Employe;
+using Shared_Erp.Entreprise;
 using System;
 using System.Collections.Generic;
 using System.Linq;

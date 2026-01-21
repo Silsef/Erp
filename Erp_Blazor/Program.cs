@@ -33,9 +33,12 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
 builder.Services.AddAuthorizationCore();
 
 // Ajouter vos services métier
+
+builder.Services.AddScoped<IProjetService, ProjetWebService>();
 builder.Services.AddScoped<IEmployeService,EmployeWebService>();
 builder.Services.AddScoped<IOffreService, OffreWebService>();
 builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
 builder.Services.AddScoped<IEntretienService, EntretienWebService>();
+builder.Services.AddScoped<IEntrepriseService, EntrepriseWebService>();
 
 await builder.Build().RunAsync();

@@ -1,5 +1,6 @@
 ﻿@page "/projets"
 @inject IProjetService ProjetService
+@inject IEntrepriseService EntrepriseService
 @attribute [Authorize]
 
 <h3>Gestion des Projets</h3>
@@ -99,21 +100,42 @@
             </div>
         }
     </div>
+
+        @if (showcreateProjetModal)
+        {
+                <div>
+                    <p>Nom</p>
+            <input class="form-control" @bind="NewProjet.Nom" />
+            <p>Description</p>
+            <textarea class="form-control" @bind="NewProjet.Description"></textarea>
+            <p>Date de début</p>
+            <input type="date" class="form-control"  @bind="NewProjet.DateDebut"  />
+            
+            <p>Priorité</p>
+            <input class="form-control" @bind="NewProjet.Priorite"/>
+
+            <button class="btn btn-primary mt-3" @onclick="SaveNewProjet">Créer Projet</button>
+
+                </div>
+        }
+    }
 </div>
 
 @code {
-    // Liste fictive pour tester l'affichage (A remplacer par ton Service API)
     private List<ProjetDTO> Projets = new List<ProjetDTO>();
+    private List<EntrepriseDTO> Entreprises = new List<EntrepriseDTO>();
 
-    // Le projet actuellement cliqué
     private ProjetDTO? SelectedProjet;
-
-    // L'onglet actif (par défaut Overview)
+    private bool showcreateProjetModal = false;
+    private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
+    
     private string ActiveTab = "overview";
 
     protected override async Task OnInitializedAsync()
     {
         Projets = await ProjetService.GetAll();
+        Entreprises = await EntrepriseService.GetAll();
+        NewProjet.DateDebut = DateTime.Now;
     }
 
     private void SelectProjet(ProjetDTO projet)
@@ -124,11 +146,18 @@
 
     private void CreateNewProjet()
     {
-        // Logique pour créer un projet ou rediriger vers une page de création
-        Console.WriteLine("Créer nouveau projet");
+        showcreateProjetModal = true;
     }
 
-    // Petit helper pour le style CSS de la sélection
+    private async Task SaveNewProjet()
+    {
+        var createdProjet = await ProjetService.Post(NewProjet);
+        Projets.Add(createdProjet);
+        SelectedProjet = createdProjet;
+
+        showcreateProjetModal = false;
+    }
+
     private string GetClassForProjet(ProjetDTO p)
     {
         return p == SelectedProjet ? "project-item active" : "project-item";
