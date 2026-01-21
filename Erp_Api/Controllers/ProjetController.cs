@@ -1,24 +1,20 @@
-﻿using AutoMapper;
+﻿// Erp_Api/Controllers/ProjetController.cs
+using AutoMapper;
+using Erp_Api.Models.Entity.Tables.Entitees;
 using Erp_Api.Models.Repository.Managers.Models_Managers;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared_Erp.Projet;
 
 namespace Erp_Api.Controllers
 {
-    [Route("api/[controller]/[action]")]
-    [ApiController]
-    [Authorize]
-    public class ProjetController: ControllerBase
+    public class ProjetController : BaseController<Projet, ProjetDTO, ProjetCreateDTO, ProjetUpdateDTO, string>
     {
-        private readonly EntretienManager _manager;
-        private readonly IMapper _mapper;
-
-        public ProjetController(EntretienManager manager, IMapper mapper)
+        public ProjetController(ProjetManager manager, IMapper mapper)
+            : base(manager, mapper)
         {
-            _manager = manager;
-            _mapper = mapper;
         }
 
+        protected override int GetEntityId(Projet entity) => entity.Id;
 
     }
 }
