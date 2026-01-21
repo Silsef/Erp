@@ -1,0 +1,136 @@
+﻿@page "/projets"
+@inject IProjetService ProjetService
+@attribute [Authorize]
+
+<h3>Gestion des Projets</h3>
+
+<div class="layout-container">
+
+    <div class="project-list-sidebar">
+        <h5 class="text-center mb-3">Mes Projets</h5>
+
+        @if (Projets == null)
+        {
+            <p class="text-center">Chargement...</p>
+        }
+        else
+        {
+            @foreach (var projet in Projets)
+            {
+                <div class="@GetClassForProjet(projet)" @onclick="() => SelectProjet(projet)">
+                    @projet.Nom
+                </div>
+            }
+        }
+
+        <button class="btn btn-sm btn-outline-light mt-3" @onclick="CreateNewProjet">
+            + Nouveau Projet
+        </button>
+    </div>
+
+    <div class="project-content-area">
+        @if (SelectedProjet == null)
+        {
+            <div class="alert alert-info">
+                Veuillez sélectionner un projet à gauche pour voir les détails.
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>@SelectedProjet.Nom</h2>
+                <span class="badge bg-secondary">@SelectedProjet.Priorite</span>
+            </div>
+
+            <ul class="nav nav-tabs project-tabs">
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "overview" ? "active" : "")"
+                       @onclick='() => ActiveTab = "overview"'>
+                        Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "taches" ? "active" : "")"
+                       @onclick='() => ActiveTab = "taches"'>
+                        Tâches
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "calendrier" ? "active" : "")"
+                       @onclick='() => ActiveTab = "calendrier"'>
+                        Calendrier
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                @if (ActiveTab == "overview")
+                {
+                    <div class="animate fade-in">
+                        <h4>Informations Générales</h4>
+                        <p><strong>Description :</strong> @SelectedProjet.Description</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Début :</strong> @SelectedProjet.DateDebut.ToShortDateString()</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Fin :</strong> @(SelectedProjet.DateFin?.ToShortDateString() ?? "En cours")</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (ActiveTab == "taches")
+                {
+                    <div class="animate fade-in">
+                        <h4>Liste des tâches</h4>
+                        <p>Ici, nous mettrons ton composant TreeView des tâches.</p>
+                    </div>
+                }
+
+                @if (ActiveTab == "calendrier")
+                {
+                    <div class="animate fade-in">
+                        <h4>Calendrier du projet</h4>
+                        <p>Ici, nous mettrons le planning des employés sur ce projet.</p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    // Liste fictive pour tester l'affichage (A remplacer par ton Service API)
+    private List<ProjetDTO> Projets = new List<ProjetDTO>();
+
+    // Le projet actuellement cliqué
+    private ProjetDTO? SelectedProjet;
+
+    // L'onglet actif (par défaut Overview)
+    private string ActiveTab = "overview";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Projets = await ProjetService.GetAll();
+    }
+
+    private void SelectProjet(ProjetDTO projet)
+    {
+        SelectedProjet = projet;
+        ActiveTab = "overview";
+    }
+
+    private void CreateNewProjet()
+    {
+        // Logique pour créer un projet ou rediriger vers une page de création
+        Console.WriteLine("Créer nouveau projet");
+    }
+
+    // Petit helper pour le style CSS de la sélection
+    private string GetClassForProjet(ProjetDTO p)
+    {
+        return p == SelectedProjet ? "project-item active" : "project-item";
+    }
+}

@@ -1,0 +1,62 @@
+﻿/* Le conteneur principal qui prend toute la hauteur disponible */
+.layout-container {
+    display: flex;
+    height: calc(100vh - 4rem); /* Ajuste selon la hauteur de ta navbar du haut */
+    gap: 1rem;
+}
+
+/* La liste des projets à gauche */
+.project-list-sidebar {
+    width: 250px;
+    background-color: #2c2f33; /* Un gris foncé style dashboard */
+    color: white;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.project-item {
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+    .project-item:hover {
+        background-color: rgba(255,255,255,0.1);
+    }
+
+    .project-item.active {
+        background-color: #1b6ec2; /* Bleu Blazor */
+        font-weight: bold;
+    }
+
+/* La zone de contenu à droite */
+.project-content-area {
+    flex: 1;
+    background-color: white; /* Ou transparent selon ton thème */
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+}
+
+/* La barre d'onglets (Tabs) */
+.project-tabs {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    cursor: pointer;
+    color: #495057;
+}
+
+    .nav-link.active {
+        color: #1b6ec2;
+        border-bottom: 2px solid #1b6ec2;
+        font-weight: bold;
+    }

@@ -12,7 +12,6 @@ namespace Erp_Blazor.Service.WebServices
 
         public async Task<EmployeDTO> GetByNom(string Nom)
         {
-            // Implémentation spécifique
             return await _client.GetFromJsonAsync<EmployeDTO>($"{_endpoint}/GetByNom/{Nom}");
         }
     }
