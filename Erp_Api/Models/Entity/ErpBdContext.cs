@@ -47,7 +47,7 @@ namespace Erp_Api.Models.Entity
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<EmployeEntite>()
-                .HasKey(ee => new { ee.EmployeId, ee.Entite });
+                .HasKey(ee => new { ee.EmployeId, ee.EntiteId });
 
             modelBuilder.Entity<EmployeEntite>()
                 .HasOne(ee => ee.Employe)
