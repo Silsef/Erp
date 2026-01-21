@@ -1,4 +1,4 @@
-﻿using Erp_Api.Models.Enums;
+﻿using Shared_Erp.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

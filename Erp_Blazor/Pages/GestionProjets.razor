@@ -1,6 +1,9 @@
 ﻿@page "/projets"
+@using Shared_Erp.Enums
+@using Shared_Erp.Tache
 @inject IProjetService ProjetService
 @inject IEntrepriseService EntrepriseService
+@* Assurez-vous d'avoir le bon namespace pour l'enum, ou déplacez l'enum dans Shared_Erp *@
 @attribute [Authorize]
 
 <h3>Gestion des Projets</h3>
@@ -24,15 +27,15 @@
             }
         }
 
-        <button class="btn btn-sm btn-outline-light mt-3" @onclick="CreateNewProjet">
-            + Nouveau Projet
+        <button class="btn btn-sm btn-outline-light mt-3 w-100" @onclick="CreateNewProjet">
+            <i class="bi bi-plus-lg"></i> + Nouveau Projet
         </button>
     </div>
 
     <div class="project-content-area">
         @if (SelectedProjet == null)
         {
-            <div class="alert alert-info">
+            <div class="alert alert-info mt-4">
                 Veuillez sélectionner un projet à gauche pour voir les détails.
             </div>
         }
@@ -40,31 +43,33 @@
         {
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2>@SelectedProjet.Nom</h2>
-                <span class="badge bg-secondary">@SelectedProjet.Priorite</span>
+                <span class="badge bg-secondary">
+                    @((NiveauPriorite)SelectedProjet.Priorite)
+                </span>
             </div>
 
             <ul class="nav nav-tabs project-tabs">
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "overview" ? "active" : "")"
-                       @onclick='() => ActiveTab = "overview"'>
+                       @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
                         Overview
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "taches" ? "active" : "")"
-                       @onclick='() => ActiveTab = "taches"'>
+                       @onclick='() => ActiveTab = "taches"' style="cursor: pointer;">
                         Tâches
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "calendrier" ? "active" : "")"
-                       @onclick='() => ActiveTab = "calendrier"'>
+                       @onclick='() => ActiveTab = "calendrier"' style="cursor: pointer;">
                         Calendrier
                     </a>
                 </li>
             </ul>
 
-            <div class="tab-content">
+            <div class="tab-content mt-3">
 
                 @if (ActiveTab == "overview")
                 {
@@ -84,10 +89,14 @@
 
                 @if (ActiveTab == "taches")
                 {
-                    <div class="animate fade-in">
-                        <h4>Liste des tâches</h4>
-                        <p>Ici, nous mettrons ton composant TreeView des tâches.</p>
-                    </div>
+                    @foreach(var tache in SelectedProjet.Taches)
+                    {
+                        <div>
+                            <div class="" @onclick="() => SelectTache(tache)">
+                                @tache.Titre @tache.EmployeAssigne.Nom
+                            </div>
+                        </div>
+                    }
                 }
 
                 @if (ActiveTab == "calendrier")
@@ -100,42 +109,96 @@
             </div>
         }
     </div>
-
-        @if (showcreateProjetModal)
-        {
-                <div>
-                    <p>Nom</p>
-            <input class="form-control" @bind="NewProjet.Nom" />
-            <p>Description</p>
-            <textarea class="form-control" @bind="NewProjet.Description"></textarea>
-            <p>Date de début</p>
-            <input type="date" class="form-control"  @bind="NewProjet.DateDebut"  />
-            
-            <p>Priorité</p>
-            <input class="form-control" @bind="NewProjet.Priorite"/>
-
-            <button class="btn btn-primary mt-3" @onclick="SaveNewProjet">Créer Projet</button>
-
-                </div>
-        }
-    }
 </div>
+
+@* --- MODAL DE CRÉATION DE PROJET --- *@
+@if (showcreateProjetModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer un nouveau projet</h5>
+                    <button type="button" class="btn-close" @onclick="() => showcreateProjetModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Nom du projet</label>
+                            <input class="form-control" @bind="NewProjet.Nom" placeholder="Ex: Refonte Site Web" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" @bind="NewProjet.Description" placeholder="Détails du projet..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date de début</label>
+                                <input type="date" class="form-control" @bind="NewProjet.DateDebut" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priorité</label>
+                                <select class="form-select" @bind="NewProjet.Priorite">
+                                    @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
+                                    {
+                                        <option value="@((int)niveau)">@niveau</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Entreprise Réalisatrice</label>
+                            <select class="form-select" @bind="NewProjet.EntrepriseRealisatriceId">
+                                <option value="">-- Sélectionner une entreprise --</option>
+                                @foreach (var ent in Entreprises)
+                                {
+                                    <option value="@ent.Id">@ent.Nom</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Entreprise Cliente</label>
+                            <select class="form-select" @bind="NewProjet.EntrepriseClienteId">
+                                <option value="">-- Sélectionner une entreprise --</option>
+                                @foreach (var ent in Entreprises)
+                                {
+                                    <option value="@ent.Id">@ent.Nom</option>
+                                }
+                            </select>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveNewProjet">Créer Projet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<ProjetDTO> Projets = new List<ProjetDTO>();
     private List<EntrepriseDTO> Entreprises = new List<EntrepriseDTO>();
 
     private ProjetDTO? SelectedProjet;
+    private TacheDTO? SelectedTache;
     private bool showcreateProjetModal = false;
     private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
-    
     private string ActiveTab = "overview";
 
     protected override async Task OnInitializedAsync()
     {
         Projets = await ProjetService.GetAll();
         Entreprises = await EntrepriseService.GetAll();
+
         NewProjet.DateDebut = DateTime.Now;
+        NewProjet.Priorite = (int)NiveauPriorite.Normale;
     }
 
     private void SelectProjet(ProjetDTO projet)
@@ -144,13 +207,25 @@
         ActiveTab = "overview";
     }
 
+    private void SelectTache(TacheDTO tache)
+    {
+        SelectedTache = tache;
+    }
+
     private void CreateNewProjet()
     {
+        NewProjet = new ProjetCreateDTO
+        {
+            DateDebut = DateTime.Now,
+            Priorite = (int)NiveauPriorite.Normale
+        };
         showcreateProjetModal = true;
     }
 
     private async Task SaveNewProjet()
     {
+        if (string.IsNullOrWhiteSpace(NewProjet.Nom)) return; // Validation simple
+
         var createdProjet = await ProjetService.Post(NewProjet);
         Projets.Add(createdProjet);
         SelectedProjet = createdProjet;

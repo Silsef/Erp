@@ -1,4 +1,4 @@
-﻿using Erp_Api.Models.Enums;
+﻿using Shared_Erp.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,16 +13,16 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int Id { get; set; }
 
         [Column("tac_nom")]
-        public int Nom { get; set; }
+        public string Nom { get; set; }
 
         [Column("tac_Description")]
-        public int Description { get; set; }
+        public string Description { get; set; }
 
         [Column("tac_datedebut")]
-        public int DateDebut { get; set; }
+        public DateTime DateDebut { get; set; }
 
         [Column("tac_datefin")]
-        public int DateFin { get; set; }
+        public DateTime DateFin { get; set; }
 
         [Column("tac_projet_id")]
         public int? ProjetId { get; set; }
@@ -31,6 +31,12 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [ForeignKey(nameof(ProjetId))]
         public Projet? Projet { get; set; }
 
+
+        [Column("tacemployeassigne_id")]
+        public int? EmployeAssigneId { get; set; }
+
+        [ForeignKey(nameof(EmployeAssigneId))]
+        public Tache? EmployeAssigne { get; set; }
 
 
         [Column("tac_priorite")]

@@ -1,4 +1,4 @@
-﻿namespace Erp_Api.Models.Enums
+﻿namespace Shared_Erp.Enums
 {
     public enum TypeMateriel
     {

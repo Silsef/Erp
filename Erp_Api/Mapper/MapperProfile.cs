@@ -9,6 +9,8 @@ using Shared_Erp.Entretien;
 using Shared_Erp.Offre;
 using Shared_Erp.Candidature;
 using Shared_Erp.Entreprise;
+using Shared_Erp.Projet;
+using Shared_Erp.Tache;
 
 namespace Erp_Api.Mapper
 {
@@ -50,6 +52,19 @@ namespace Erp_Api.Mapper
                 .ForMember(d => d.Nominterviewer, opt => opt.MapFrom(src => src.Interviewer != null ? $"{src.Interviewer.Prenom} {src.Interviewer.Nom}" : null));
             CreateMap<EntretienCreateDTO, Entretien>();
             CreateMap<EntretienUpdateDTO, Entretien>();
+
+            CreateMap<Entreprise,EntrepriseDTO>().ReverseMap();
+            CreateMap<Entreprise,EntrepriseCreateDTO>().ReverseMap();
+            CreateMap<Entreprise,EntrepriseUpdateDTO>().ReverseMap();
+
+            CreateMap<Projet, ProjetDTO>().ReverseMap();
+            CreateMap<Projet, ProjetCreateDTO>().ReverseMap();
+            CreateMap<Projet, ProjetUpdateDTO>().ReverseMap();
+
+            CreateMap<Tache, TacheDTO>()
+                .ForMember(d => d.ProjetId, opt => opt.MapFrom(src => src.Projet))
+                .ForMember(d => d.EmployeAssigne, opt => opt.Ignore())
+                .ReverseMap();
         }
     }
 }
