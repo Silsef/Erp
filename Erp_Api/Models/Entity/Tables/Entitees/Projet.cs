@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Erp_Api.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Erp_Api.Models.Entity.Tables.Entitees
@@ -31,6 +32,9 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int? EntrepriseClienteId { get; set; }
         public Entreprise? EntrepriseCliente { get; set; }
 
+        [Column("pro_priorite")]
+        public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
+        public ICollection<Tache> Taches { get; set; } = new List<Tache>();
 
 
     }
