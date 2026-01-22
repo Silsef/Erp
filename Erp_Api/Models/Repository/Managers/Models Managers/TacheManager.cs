@@ -21,6 +21,8 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet
                 .Include(t=>t.EmployeAssigne)
                 .Include(t=>t.Projet)
+                .Include(t=>t.TacheParente)
+                .Include(t=>t.SousTaches)
                 .ToListAsync();
         }
     }

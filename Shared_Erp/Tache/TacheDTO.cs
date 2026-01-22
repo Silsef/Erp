@@ -20,6 +20,7 @@ namespace Shared_Erp.Tache
         public int Priorite { get; set; }
         public int? ProjetId { get; set; }
         public int? EmployeAssigne { get; set; }
+        public int? TacheParenteId { get; set; }
 
     }
 

@@ -62,6 +62,8 @@ namespace Erp_Api.Mapper
             CreateMap<Tache, TacheDTO>()
                 .ForMember(d => d.ProjetId, opt => opt.MapFrom(src => src.ProjetId))
                 .ForMember(d => d.EmployeAssigne, opt => opt.MapFrom(src => src.EmployeAssigneId))
+                .ForMember(d => d.TacheParenteId, opt => opt.MapFrom(src => src.TacheParenteId))
+
                 .ReverseMap();
         }
     }
