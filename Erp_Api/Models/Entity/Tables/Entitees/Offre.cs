@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Shared_Erp.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Erp_Api.Models.Entity.Tables.Entitees
@@ -43,7 +44,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("off_type_contrat_id")]
         public int TypeContratId { get; set; }
 
-        public TypeContrat TypeContrat { get; set; } = null!;
+        public TypeContrat TypeContrat { get; set; }
 
         public ICollection<Candidature> Candidatures { get; set; } = new List<Candidature>();
 

@@ -21,9 +21,7 @@ namespace Erp_Api.Models.Entity
         public DbSet<A_Pour_Role> A_Pour_Roles { get; set; }
         public DbSet<Candidature> Candidatures { get; set; }
         public DbSet<Offre> Offres { get; set; }
-        public DbSet<TypeContrat> TypeContrats { get; set; }
         public DbSet<Entretien> Entretiens { get; set; }
-        public DbSet<TypeEntretien> TypeEntretiens { get; set; }
         public DbSet<Plateforme> Plateformes { get; set; }
         public DbSet<Projet> Projets { get; set; }
         public DbSet<Tache> Taches { get; set; }
@@ -76,19 +74,6 @@ namespace Erp_Api.Models.Entity
                 .HasForeignKey(apr => apr.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Offre -> TypeContrat
-            modelBuilder.Entity<Offre>()
-                .HasOne(o => o.TypeContrat)
-                .WithMany(tc => tc.Offres)
-                .HasForeignKey(o => o.TypeContratId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Entretien>()
-                .HasOne(e => e.TypeEntretien)
-                .WithMany()
-                .HasForeignKey(e => e.TypeEntretienId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // Candidature -> Offre
             modelBuilder.Entity<Candidature>()
                 .HasOne(c => c.Offre)
@@ -99,13 +84,13 @@ namespace Erp_Api.Models.Entity
             modelBuilder.Entity<Projet>()
                 .HasOne(p => p.EntiteRealisatrice)
                 .WithMany(e => e.ProjetsRealises)
-                .HasForeignKey(p => p.EntrepriseRealisatriceId)
+                .HasForeignKey(p => p.EntiteRealisatriceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Projet>()
                 .HasOne(p => p.EntiteCliente)
                 .WithMany(e => e.ProjetsCommandes)
-                .HasForeignKey(p => p.EntrepriseClienteId)
+                .HasForeignKey(p => p.EntiteClienteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Tache>()

@@ -24,12 +24,12 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("pro_date_fin")]
         public DateTime? DateFin { get; set; }
 
-        [Column("pro_entreprise_id")]
-        public int? EntrepriseRealisatriceId { get; set; }
+        [Column("pro_entite_id")]
+        public int? EntiteRealisatriceId { get; set; }
         public Entite? EntiteRealisatrice { get; set; }
 
-        [Column("pro_entrepriseclient_id")]
-        public int? EntrepriseClienteId { get; set; }
+        [Column("pro_entiteclient_id")]
+        public int? EntiteClienteId { get; set; }
         public Entite? EntiteCliente { get; set; }
 
         [Column("pro_priorite")]

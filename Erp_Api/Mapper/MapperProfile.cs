@@ -31,8 +31,7 @@ namespace Erp_Api.Mapper
             CreateMap<Entite, EntiteDTO>().ReverseMap();
 
             // Offre mappings
-            CreateMap<Offre, OffreDTO>()
-                .ForMember(d => d.TypeContratLibelle, opt => opt.MapFrom(src => src.TypeContrat.Libelle));
+            CreateMap<Offre, OffreDTO>();
             CreateMap<OffreCreateDTO, Offre>();
             CreateMap<OffreUpdateDTO, Offre>();
 

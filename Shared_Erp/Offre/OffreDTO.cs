@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared_Erp.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,6 @@ namespace Shared_Erp.Offre
         public bool EstActive { get; set; }
         public int NombrePostes { get; set; }
         public int? EntrepriseId { get; set; }
-        public int TypeContratId { get; set; }
-        public string? TypeContratLibelle { get; set; }
+        public TypeContrat TypeContrat { get; set; }
     }
 }

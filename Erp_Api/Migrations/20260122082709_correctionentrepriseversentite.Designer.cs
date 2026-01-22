@@ -3,6 +3,7 @@ using System;
 using Erp_Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erp_Api.Migrations
 {
     [DbContext(typeof(ErpBdContext))]
-    partial class ErpBdContextModelSnapshot : ModelSnapshot
+    [Migration("20260122082709_correctionentrepriseversentite")]
+    partial class correctionentrepriseversentite
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -446,13 +449,13 @@ namespace Erp_Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("pro_description");
 
-                    b.Property<int?>("EntiteClienteId")
+                    b.Property<int?>("EntrepriseClienteId")
                         .HasColumnType("integer")
-                        .HasColumnName("pro_entiteclient_id");
+                        .HasColumnName("pro_entrepriseclient_id");
 
-                    b.Property<int?>("EntiteRealisatriceId")
+                    b.Property<int?>("EntrepriseRealisatriceId")
                         .HasColumnType("integer")
-                        .HasColumnName("pro_entite_id");
+                        .HasColumnName("pro_entreprise_id");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -465,9 +468,9 @@ namespace Erp_Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EntiteClienteId");
+                    b.HasIndex("EntrepriseClienteId");
 
-                    b.HasIndex("EntiteRealisatriceId");
+                    b.HasIndex("EntrepriseRealisatriceId");
 
                     b.ToTable("t_e_projet_pro", "erp");
                 });
@@ -574,7 +577,7 @@ namespace Erp_Api.Migrations
 
                     b.Property<int>("EntiteId")
                         .HasColumnType("integer")
-                        .HasColumnName("eem_entite_id");
+                        .HasColumnName("eem_Entite_id");
 
                     b.Property<DateTime>("DateDebut")
                         .HasColumnType("timestamp with time zone")
@@ -691,12 +694,12 @@ namespace Erp_Api.Migrations
                 {
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entite", "EntiteCliente")
                         .WithMany("ProjetsCommandes")
-                        .HasForeignKey("EntiteClienteId")
+                        .HasForeignKey("EntrepriseClienteId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entite", "EntiteRealisatrice")
                         .WithMany("ProjetsRealises")
-                        .HasForeignKey("EntiteRealisatriceId")
+                        .HasForeignKey("EntrepriseRealisatriceId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("EntiteCliente");

@@ -5,7 +5,7 @@ namespace Erp_Blazor.Service.WebServices
 {
     public class EntiteWebService : BaseWebService<EntiteDTO, EntiteCreateDTO, EntiteUpdateDTO>, IEntiteService
     {
-        public EntiteWebService(HttpClient client) : base(client, "api/entreprise")
+        public EntiteWebService(HttpClient client) : base(client, "api/entite")
         {
         }
     }

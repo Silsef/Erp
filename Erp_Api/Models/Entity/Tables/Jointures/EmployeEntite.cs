@@ -11,7 +11,7 @@ namespace Erp_Api.Models.Entity.Tables.Jointures
         [ForeignKey(nameof(Employe))]
         public int EmployeId { get; set; }
 
-        [Column("eem_Entite_id")]
+        [Column("eem_entite_id")]
         [ForeignKey(nameof(Entite))]
         public int EntiteId { get; set; }
 

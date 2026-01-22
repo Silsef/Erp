@@ -150,9 +150,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Entreprise Réalisatrice</label>
-                            <select class="form-select" @bind="NewProjet.EntrepriseRealisatriceId">
-                                <option value="">-- Sélectionner une entreprise --</option>
+                            <label class="form-label">Entité Réalisatrice</label>
+                            <select class="form-select" @bind="NewProjet.EntiteRealisatriceId">
+                                <option value="">-- Sélectionner une entité --</option>
                                 @foreach (var ent in Entites)
                                 {
                                     <option value="@ent.Id">@ent.Nom</option>
@@ -161,9 +161,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Entreprise Cliente</label>
-                            <select class="form-select" @bind="NewProjet.EntrepriseClienteId">
-                                <option value="">-- Sélectionner une entreprise --</option>
+                            <label class="form-label">Entité Cliente</label>
+                            <select class="form-select" @bind="NewProjet.EntiteClienteId">
+                                <option value="">-- Sélectionner une entité --</option>
                                 @foreach (var ent in Entites)
                                 {
                                     <option value="@ent.Id">@ent.Nom</option>
@@ -212,7 +212,7 @@
         SelectedTache = tache;
     }
 
-    private void CreateNewProjet()
+    private async void CreateNewProjet()
     {
         NewProjet = new ProjetCreateDTO
         {

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Shared_Erp.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Erp_Api.Models.Entity.Tables.Entitees
@@ -30,6 +31,6 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int TypeEntretienId { get; set; }
 
         [ForeignKey("TypeEntretienId")]
-        public TypeEntretien TypeEntretien { get; set; } = null!;
+        public TypeEntretien TypeEntretien { get; set; }
     }
 }

@@ -29,7 +29,7 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
     // --- ECRITURE (Avec DTO spécifique) ---
     public async Task<TRead> Post(TCreate item)
     {
-        var response = await _client.PostAsJsonAsync(_endpoint, item);
+        var response = await _client.PostAsJsonAsync(_endpoint + "/Create", item);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<TRead>();
     }
