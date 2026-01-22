@@ -16,9 +16,6 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("ft_est_matin")]
         public bool EstMatin { get; set; }
 
-        [Column("ft_est_present")]
-        public bool EstPresent { get; set; } 
-
         [Column("ft_employe_id")]
         public int EmployeId { get; set; }
         public Employe Employe { get; set; } = null!;

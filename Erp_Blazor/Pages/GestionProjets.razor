@@ -207,23 +207,14 @@
                                                    value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
                                         </div>
 
-                                        <div class="mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox"
-                                                       @bind="ModalEstPresent" id="presentCheck">
-                                                <label class="form-check-label" for="presentCheck">
-                                                    Présent(e)
-                                                </label>
-                                            </div>
-                                        </div>
+                                       
 
-                                        @if (ModalEstPresent)
-                                        {
+                                        
                                             <div class="mb-3">
                                                 <label class="form-label">Commentaire</label>
                                                 <textarea class="form-control" rows="3" @bind="ModalCommentaire"></textarea>
                                             </div>
-                                        }
+                                        
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
@@ -336,7 +327,6 @@
     private FeuilleTempsDTO? EditingFeuille;
     private DateTime ModalDate;
     private bool ModalEstMatin;
-    private bool ModalEstPresent = true;
     private string? ModalCommentaire;
 
     protected override async Task OnInitializedAsync()
@@ -417,12 +407,8 @@
 
         try
         {
-            FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee);
+            FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee,SelectedProjet.Id);
 
-            // Filtrer uniquement les feuilles de temps liées au projet sélectionné
-            FeuillesTemps = FeuillesTemps
-                .Where(f => f.ProjetId == SelectedProjet.Id)
-                .ToList();
 
             CalculateDates();
         }
@@ -475,13 +461,6 @@
             builder.OpenElement(3, "div");
             builder.AddAttribute(4, "class", "cell-content");
 
-            if (feuille.EstPresent)
-            {
-                builder.OpenElement(5, "div");
-                builder.AddAttribute(6, "class", "presence-badge present");
-                builder.AddContent(7, "✓ Présent");
-                builder.CloseElement();
-
                 if (!string.IsNullOrEmpty(feuille.Commentaire))
                 {
                     builder.OpenElement(8, "div");
@@ -489,14 +468,8 @@
                     builder.AddContent(10, feuille.Commentaire);
                     builder.CloseElement();
                 }
-            }
-            else
-            {
-                builder.OpenElement(11, "div");
-                builder.AddAttribute(12, "class", "presence-badge absent");
-                builder.AddContent(13, "✗ Absent");
-                builder.CloseElement();
-            }
+            
+
 
             builder.CloseElement();
         }
@@ -519,12 +492,11 @@
 
         if (feuille != null)
         {
-            ModalEstPresent = feuille.EstPresent;
             ModalCommentaire = feuille.Commentaire;
         }
         else
         {
-            ModalEstPresent = true;
+
             ModalCommentaire = null;
         }
 
@@ -556,7 +528,6 @@
                 {
                     Date = ModalDate,
                     EstMatin = ModalEstMatin,
-                    EstPresent = ModalEstPresent,
                     ProjetId = SelectedProjet?.Id,
                     Commentaire = ModalCommentaire
                 };

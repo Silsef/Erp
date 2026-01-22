@@ -26,10 +26,9 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(t => t.Employe)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
-
-        public async Task<IEnumerable<FeuilleTemps>> GetByEmployeIdAndWeekAsync(int employeId, int numsemaine, int? year = null)
+        public async Task<IEnumerable<FeuilleTemps>> GetByEmployeIdAndWeekAsync(int employeId, int numsemaine, int? year = null, int? projetId = null)
         {
-            int anneeCible = year ?? DateTime.Now.Year;
+            int anneeCible = year ?? DateTime.UtcNow.Year; 
 
             DateTime jan4 = new DateTime(anneeCible, 1, 4);
             int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
@@ -38,11 +37,21 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             DateTime startOfWeek = firstMondayOfYear.AddDays((numsemaine - 1) * 7);
             DateTime endOfWeek = startOfWeek.AddDays(7);
 
-            return await dbSet
+            var startOfWeekUtc = DateTime.SpecifyKind(startOfWeek, DateTimeKind.Utc);
+            var endOfWeekUtc = DateTime.SpecifyKind(endOfWeek, DateTimeKind.Utc);
+
+            var query = dbSet
                 .Include(a => a.Employe)
                 .Include(a => a.Projet)
                 .Where(ft => ft.EmployeId == employeId)
-                .Where(ft => ft.Date >= startOfWeek && ft.Date < endOfWeek)
+                .Where(ft => ft.Date >= startOfWeekUtc && ft.Date < endOfWeekUtc);
+
+            if (projetId.HasValue)
+            {
+                query = query.Where(ft => ft.ProjetId == projetId.Value);
+            }
+
+            return await query
                 .OrderBy(ft => ft.Date)
                 .ToListAsync();
         }

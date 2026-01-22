@@ -4,6 +4,6 @@ namespace Erp_Api.Models.Repository.Interfaces
 {
     public interface IFeuilleTempsRepository
     {
-        Task<IEnumerable<FeuilleTemps>> GetByEmployeIdAndWeekAsync(int employeId, int numsemaine, int? year = null);
+        Task<IEnumerable<FeuilleTemps>> GetByEmployeIdAndWeekAsync(int employeId, int numsemaine, int? year = null, int? projetId = null);
     }
 }

@@ -22,12 +22,13 @@ namespace Erp_Api.Controllers
         /// Récupère les feuilles de temps d'une semaine
         /// Si employeId n'est pas fourni, utilise l'utilisateur connecté
         /// </summary>
-        [HttpGet("GetBySemaine/{numSemaine}")]
-        [HttpGet("GetBySemaine/{employeId}/{numSemaine}")]
+        [HttpGet("{numSemaine}")]
+        [HttpGet("{employeId}/{numSemaine}")]
         public async Task<ActionResult<IEnumerable<FeuilleTempsDTO>>> GetBySemaine(
-            int numSemaine,
-            int? employeId = null,
-            [FromQuery] int? annee = null)
+        int numSemaine,
+        int? employeId = null,
+        [FromQuery] int? annee = null,
+        [FromQuery] int? projetId = null) 
         {
             int effectiveEmployeId;
 
@@ -38,14 +39,13 @@ namespace Erp_Api.Controllers
             else
             {
                 var userIdClaim = User.FindFirst("id")?.Value;
-
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out effectiveEmployeId))
                 {
                     return Unauthorized("Utilisateur non authentifié");
                 }
             }
 
-            var result = await _feuilleTempsManager.GetByEmployeIdAndWeekAsync(effectiveEmployeId, numSemaine, annee);
+            var result = await _feuilleTempsManager.GetByEmployeIdAndWeekAsync(effectiveEmployeId, numSemaine, annee, projetId);
             return Ok(_mapper.Map<IEnumerable<FeuilleTempsDTO>>(result));
         }
 
