@@ -42,9 +42,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         // 🔽 FK TypeContrat
         [Column("off_type_contrat_id")]
-        public int TypeContratId { get; set; }
-
-        public TypeContrat TypeContrat { get; set; }
+        public TypeContrat TypeContrat { get; set; } 
 
         public ICollection<Candidature> Candidatures { get; set; } = new List<Candidature>();
 

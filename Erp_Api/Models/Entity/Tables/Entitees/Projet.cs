@@ -28,15 +28,15 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int? EntiteRealisatriceId { get; set; }
         public Entite? EntiteRealisatrice { get; set; }
 
-        [Column("pro_entiteclient_id")]
+        [ForeignKey("pro_entiteclient_id")]
         public int? EntiteClienteId { get; set; }
         public Entite? EntiteCliente { get; set; }
 
-        [Column("pro_priorite")]
+        [ForeignKey("pro_priorite")]
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
         public ICollection<Tache> Taches { get; set; } = new List<Tache>();
 
-        [Column("pro_employeresponsable_id")]
+        [ForeignKey("pro_employeresponsable_id")]
         public int? EmployeResponsableId { get; set; }
         public Employe? EmployeResponsable { get; set; }
     }

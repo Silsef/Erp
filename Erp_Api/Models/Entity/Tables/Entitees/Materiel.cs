@@ -20,7 +20,6 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("mat_quantite")]
         public int Quantite { get; set; }
 
-        // Lien optionnel vers un projet si la commande est pour un projet spécifique
         [Column("mat_projet_id")]
         public int? ProjetId { get; set; }
         public Projet? Projet { get; set; }
