@@ -404,17 +404,26 @@
         if (SelectedEmployeId == 0) return;
 
         IsLoadingCalendrier = true;
+        StateHasChanged();
 
         try
         {
-            FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee,SelectedProjet.Id);
+            FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee, SelectedProjet.Id);
 
+            Console.WriteLine($"Chargement : {FeuillesTemps.Count} feuilles de temps");
+            foreach (var ft in FeuillesTemps)
+            {
+                Console.WriteLine($"  - Date: {ft.Date:yyyy-MM-dd}, Matin: {ft.EstMatin}, Projet: {ft.ProjetNom}");
+            }
 
             CalculateDates();
+
+            Console.WriteLine($"Période : {StartOfWeek:yyyy-MM-dd} à {EndOfWeek:yyyy-MM-dd}");
         }
         finally
         {
             IsLoadingCalendrier = false;
+            StateHasChanged(); 
         }
     }
 
@@ -437,12 +446,13 @@
         };
     }
 
-    private void GoToCurrentWeek()
+    private async Task GoToCurrentWeek()
     {
         var now = DateTime.Now;
         NumSemaine = ISOWeek.GetWeekOfYear(now);
         Annee = now.Year;
-        _ = LoadCalendrierData();
+        await LoadCalendrierData(); 
+        StateHasChanged();
     }
 
     private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>

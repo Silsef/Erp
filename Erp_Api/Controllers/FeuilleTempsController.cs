@@ -65,7 +65,10 @@ namespace Erp_Api.Controllers
             }
 
             var result = await _manager.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<FeuilleTempsDTO>(result));
+
+            var resultWithIncludes = await _manager.GetByIdAsync(result.Id);
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<FeuilleTempsDTO>(resultWithIncludes));
         }
     }
 }

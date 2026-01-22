@@ -14,9 +14,9 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
         public override Task<FeuilleTemps?> GetByNameAsync(string name)
         {
             return dbSet
-                .Include(a=> a.Employe)
-                .Include(a=> a.Projet)
-                .FirstOrDefaultAsync(ft => ft.Employe.Nom == name || ft .Employe.Prenom == name);
+                .Include(a => a.Employe)
+                .Include(a => a.Projet)
+                .FirstOrDefaultAsync(ft => ft.Employe.Nom == name || ft.Employe.Prenom == name);
         }
 
         public override async Task<FeuilleTemps?> GetByIdAsync(int id)
@@ -26,9 +26,10 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(t => t.Employe)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
+
         public async Task<IEnumerable<FeuilleTemps>> GetByEmployeIdAndWeekAsync(int employeId, int numsemaine, int? year = null, int? projetId = null)
         {
-            int anneeCible = year ?? DateTime.UtcNow.Year; 
+            int anneeCible = year ?? DateTime.UtcNow.Year;
 
             DateTime jan4 = new DateTime(anneeCible, 1, 4);
             int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
@@ -44,7 +45,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(a => a.Employe)
                 .Include(a => a.Projet)
                 .Where(ft => ft.EmployeId == employeId)
-                .Where(ft => ft.Date >= startOfWeekUtc && ft.Date < endOfWeekUtc);
+                .Where(ft => ft.Date.Date >= startOfWeekUtc.Date && ft.Date.Date < endOfWeekUtc.Date);
 
             if (projetId.HasValue)
             {
