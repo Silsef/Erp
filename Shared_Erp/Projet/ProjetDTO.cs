@@ -19,10 +19,11 @@ namespace Shared_Erp.Projet
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public EntiteDTO? EntrepriseRealisatrice { get; set; }
-        public EntiteDTO? EntrepriseCliente { get; set; }
+        public string? EntiteRealisatriceNom { get; set; }
+        public string? EntiteClienteNom { get; set; }
         public NiveauPriorite Priorite { get; set; }
         public List<TacheDTO> Taches { get; set; } = new List<TacheDTO>();
+        public string ? EmployeResponsablePrenom { get; set; }
 
     }
 }

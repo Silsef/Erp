@@ -18,17 +18,10 @@ namespace Erp_Api.Controllers
     {
         protected readonly IDataRepository<TEntity, TKey> _manager;
         protected readonly IMapper _mapper;
-        private TacheManager manager;
 
         protected BaseController(IDataRepository<TEntity, TKey> manager, IMapper mapper)
         {
             _manager = manager;
-            _mapper = mapper;
-        }
-
-        protected BaseController(TacheManager manager, IMapper mapper)
-        {
-            this.manager = manager;
             _mapper = mapper;
         }
 

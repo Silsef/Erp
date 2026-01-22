@@ -36,6 +36,8 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
         public ICollection<Tache> Taches { get; set; } = new List<Tache>();
 
-
+        [Column("pro_employeresponsable_id")]
+        public int? EmployeResponsableId { get; set; }
+        public Employe? EmployeResponsable { get; set; }
     }
 }

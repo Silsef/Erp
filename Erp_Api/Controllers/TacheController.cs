@@ -5,7 +5,7 @@ using Shared_Erp.Tache;
 
 namespace Erp_Api.Controllers
 {
-    public class TacheController : BaseController<Tache, TacheDTO, TacheCreateDTO, TacheUpdateDTO, int>
+    public class TacheController : BaseController<Tache, TacheDTO, TacheCreateDTO, TacheUpdateDTO, string>
     {
         public TacheController(TacheManager manager, IMapper mapper)
             : base(manager, mapper)
