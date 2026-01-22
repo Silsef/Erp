@@ -14,32 +14,39 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Configuration de l'URL de l'API
 var apiUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7223";
 
-// HttpClient configuré avec l'URL de base
-builder.Services.AddScoped(sp => new HttpClient
-{
-    BaseAddress = new Uri(apiUrl)
-});
-
-// LocalStorage
+// Ajouter le localStorage
 builder.Services.AddBlazoredLocalStorage();
+
+// Enregistrer le AuthTokenHandler comme scoped
+builder.Services.AddScoped<AuthTokenHandler>();
+
+// Configurer HttpClient avec le handler qui ajoute automatiquement le token
+builder.Services.AddScoped(sp =>
+{
+    var localStorage = sp.GetRequiredService<ILocalStorageService>();
+    var handler = new AuthTokenHandler(localStorage)
+    {
+        InnerHandler = new HttpClientHandler()
+    };
+
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(apiUrl)
+    };
+});
 
 // Services d'authentification
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<CustomAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
-    provider.GetRequiredService<CustomAuthStateProvider>());
-
-// Ajouter les services d'autorisation
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
 
-// Ajouter vos services métier
-
+// Services métier
 builder.Services.AddScoped<IProjetService, ProjetWebService>();
-builder.Services.AddScoped<IEmployeService,EmployeWebService>();
+builder.Services.AddScoped<IEntiteService, EntiteWebService>();
+builder.Services.AddScoped<IEmployeService, EmployeWebService>();
 builder.Services.AddScoped<IOffreService, OffreWebService>();
 builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
 builder.Services.AddScoped<IEntretienService, EntretienWebService>();
-builder.Services.AddScoped<IEntiteService, EntiteWebService>();
 builder.Services.AddScoped<IFeuilleTempsService, FeuilleTempsWebService>();
 
 await builder.Build().RunAsync();
