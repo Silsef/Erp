@@ -3,7 +3,6 @@ using Erp_Api.Models.Entity.Tables.Entitees;
 using Erp_Api.Models.Repository.Managers.Models_Managers;
 using Microsoft.AspNetCore.Mvc;
 using Shared_Erp.FeuilleTemps;
-using Shared_Erp.Projet;
 using System.Security.Claims;
 
 namespace Erp_Api.Controllers
@@ -19,20 +18,42 @@ namespace Erp_Api.Controllers
 
         protected override int GetEntityId(FeuilleTemps entity) => entity.Id;
 
+        /// <summary>
+        /// Récupère les feuilles de temps d'une semaine
+        /// Si employeId n'est pas fourni, utilise l'utilisateur connecté
+        /// </summary>
+        [HttpGet("GetBySemaine/{numSemaine}")]
         [HttpGet("GetBySemaine/{employeId}/{numSemaine}")]
-        public async Task<ActionResult<IEnumerable<FeuilleTempsDTO>>> GetBySemaine(int employeId, int numSemaine, [FromQuery] int? annee = null)
+        public async Task<ActionResult<IEnumerable<FeuilleTempsDTO>>> GetBySemaine(
+            int numSemaine,
+            int? employeId = null,
+            [FromQuery] int? annee = null)
         {
-            var result = await _feuilleTempsManager.GetByEmployeIdAndWeekAsync(employeId, numSemaine, annee);
+            int effectiveEmployeId;
 
+            if (employeId.HasValue)
+            {
+                effectiveEmployeId = employeId.Value;
+            }
+            else
+            {
+                var userIdClaim = User.FindFirst("id")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out effectiveEmployeId))
+                {
+                    return Unauthorized("Utilisateur non authentifié");
+                }
+            }
+
+            var result = await _feuilleTempsManager.GetByEmployeIdAndWeekAsync(effectiveEmployeId, numSemaine, annee);
             return Ok(_mapper.Map<IEnumerable<FeuilleTempsDTO>>(result));
         }
-
 
         public override async Task<ActionResult<FeuilleTempsDTO>> Create([FromBody] FeuilleTempsCreateDTO createDto)
         {
             var entity = _mapper.Map<FeuilleTemps>(createDto);
 
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdString = User.FindFirst("id")?.Value;
 
             if (int.TryParse(userIdString, out int userId))
             {
@@ -42,6 +63,7 @@ namespace Erp_Api.Controllers
             {
                 return Unauthorized();
             }
+
             var result = await _manager.AddAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<FeuilleTempsDTO>(result));
         }

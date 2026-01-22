@@ -1,34 +1,383 @@
-﻿@using Shared_Erp.FeuilleTemps
-@page "/calendrierprojet"
+﻿@page "/calendrierprojet"
+@page "/calendrierprojet/{EmployeIdParam:int}"
+@using Shared_Erp.Employe
+@using Shared_Erp.FeuilleTemps
+@using System.Globalization
 @inject IFeuilleTempsService FeuilleTempsService
+@inject IEmployeService EmployeService
+@inject IProjetService ProjetService
+@attribute [Authorize]
 
-<h3>CalendrierProjet</h3>
+<PageTitle>Calendrier - Feuilles de temps</PageTitle>
 
-<div>
-    <div>
+<div class="calendrier-container">
+    <div class="calendrier-header">
+        <h3>📅 Feuilles de temps</h3>
 
-        <div>
+        <div class="controls-row">
+            <!-- Sélection de l'employé (uniquement pour les chefs de projet) -->
+            @if (IsChefDeProjet)
+            {
+                <div class="control-group">
+                    <label>Employé :</label>
+                    <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadData">
+                        @foreach (var emp in Employes)
+                        {
+                            <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
+                        }
+                    </select>
+                </div>
+            }
+            else
+            {
+                <div class="control-group">
+                    <h5>Mes feuilles de temps</h5>
+                </div>
+            }
 
+            <!-- Sélection de la semaine -->
+            <div class="control-group">
+                <label>Semaine :</label>
+                <input type="number" class="form-control" min="1" max="53"
+                       @bind="NumSemaine" @bind:after="LoadData" />
+            </div>
+
+            <!-- Sélection de l'année -->
+            <div class="control-group">
+                <label>Année :</label>
+                <input type="number" class="form-control"
+                       @bind="Annee" @bind:after="LoadData" />
+            </div>
+
+            <button class="btn btn-primary" @onclick="GoToCurrentWeek">
+                Semaine actuelle
+            </button>
         </div>
 
+        <!-- Affichage de la période -->
+        <div class="periode-display">
+            Du @StartOfWeek.ToString("dd/MM/yyyy") au @EndOfWeek.ToString("dd/MM/yyyy")
+        </div>
     </div>
-    <div>
 
-    </div>
+    @if (IsLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <div class="calendar-grid">
+            <!-- En-têtes des jours -->
+            <div class="calendar-header-cell corner-cell"></div>
+            @foreach (var jour in JoursSemaine)
+            {
+                <div class="calendar-header-cell day-header" colspan="2">
+                    <div class="day-name">@jour.Nom</div>
+                    <div class="day-date">@jour.Date.ToString("dd/MM")</div>
+                </div>
+            }
 
+            <!-- Ligne Matin -->
+            <div class="calendar-row-header">Matin</div>
+            @foreach (var jour in JoursSemaine)
+            {
+                @RenderCell(jour.Date, true)
+            }
+
+            <!-- Ligne Après-midi -->
+            <div class="calendar-row-header">Après-midi</div>
+            @foreach (var jour in JoursSemaine)
+            {
+                @RenderCell(jour.Date, false)
+            }
+        </div>
+    }
 </div>
 
+<!-- Modal pour créer/éditer une feuille de temps -->
+@if (ShowModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(EditingFeuille == null ? "Ajouter" : "Modifier") une feuille de temps
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" @bind="ModalDate" disabled />
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Période</label>
+                        <input type="text" class="form-control"
+                               value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   @bind="ModalEstPresent" id="presentCheck">
+                            <label class="form-check-label" for="presentCheck">
+                                Présent(e)
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (ModalEstPresent)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Projet</label>
+                            <select class="form-select" @bind="ModalProjetId">
+                                <option value="">-- Aucun projet --</option>
+                                @foreach (var projet in Projets)
+                                {
+                                    <option value="@projet.Id">@projet.Nom</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Commentaire</label>
+                            <textarea class="form-control" rows="3" @bind="ModalCommentaire"></textarea>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveFeuille">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    public List<FeuilleTempsDTO> listeFeuilleTemps = new List<FeuilleTempsDTO>();
+    [Parameter] public int? EmployeIdParam { get; set; }
+
+    private List<FeuilleTempsDTO> FeuillesTemps = new();
+    private List<EmployeDTO> Employes = new();
+    private List<ProjetDTO> Projets = new();
+
+    private int SelectedEmployeId;
+    private int NumSemaine;
+    private int Annee;
+    private bool IsLoading = true;
+    private bool IsChefDeProjet => EmployeIdParam.HasValue;
+
+    private DateTime StartOfWeek;
+    private DateTime EndOfWeek;
+    private List<JourSemaine> JoursSemaine = new();
+
+    // Modal
+    private bool ShowModal = false;
+    private FeuilleTempsDTO? EditingFeuille;
+    private DateTime ModalDate;
+    private bool ModalEstMatin;
+    private bool ModalEstPresent = true;
+    private int? ModalProjetId;
+    private string? ModalCommentaire;
 
     protected override async Task OnInitializedAsync()
     {
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+
+        if (IsChefDeProjet)
+        {
+            // Mode chef de projet
+            Employes = await EmployeService.GetAll();
+            SelectedEmployeId = EmployeIdParam ?? Employes.FirstOrDefault()?.Id ?? 0;
+        }
+
+        Projets = await ProjetService.GetAll();
         await LoadData();
     }
+
     private async Task LoadData()
     {
-        FeuilleTempsService.GetBySemaine();
+        IsLoading = true;
+
+        try
+        {
+            if (IsChefDeProjet)
+            {
+                FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee);
+            }
+            else
+            {
+                // L'employeId sera récupéré automatiquement côté serveur
+                FeuillesTemps = await FeuilleTempsService.GetBySemaine(0, NumSemaine, Annee);
+            }
+
+            CalculateDates();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void CalculateDates()
+    {
+        var jan4 = new DateTime(Annee, 1, 4);
+        int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
+        var firstMonday = jan4.AddDays(-daysOffset);
+
+        StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
+        EndOfWeek = StartOfWeek.AddDays(4); // Vendredi
+
+        JoursSemaine = new List<JourSemaine>
+        {
+            new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
+            new JourSemaine { Nom = "Mardi", Date = StartOfWeek.AddDays(1) },
+            new JourSemaine { Nom = "Mercredi", Date = StartOfWeek.AddDays(2) },
+            new JourSemaine { Nom = "Jeudi", Date = StartOfWeek.AddDays(3) },
+            new JourSemaine { Nom = "Vendredi", Date = StartOfWeek.AddDays(4) }
+        };
+    }
+
+    private void GoToCurrentWeek()
+    {
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+        _ = LoadData();
+    }
+
+    private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
+    {
+        var feuille = FeuillesTemps.FirstOrDefault(f =>
+            f.Date.Date == date.Date && f.EstMatin == estMatin);
+
+        var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", cellClass);
+        builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
+
+        if (feuille != null)
+        {
+            builder.OpenElement(3, "div");
+            builder.AddAttribute(4, "class", "cell-content");
+
+            if (feuille.EstPresent)
+            {
+                builder.OpenElement(5, "div");
+                builder.AddAttribute(6, "class", "presence-badge present");
+                builder.AddContent(7, "✓ Présent");
+                builder.CloseElement();
+
+                if (!string.IsNullOrEmpty(feuille.ProjetNom))
+                {
+                    builder.OpenElement(8, "div");
+                    builder.AddAttribute(9, "class", "projet-name");
+                    builder.AddContent(10, $"📁 {feuille.ProjetNom}");
+                    builder.CloseElement();
+                }
+
+                if (!string.IsNullOrEmpty(feuille.Commentaire))
+                {
+                    builder.OpenElement(11, "div");
+                    builder.AddAttribute(12, "class", "commentaire");
+                    builder.AddContent(13, feuille.Commentaire);
+                    builder.CloseElement();
+                }
+            }
+            else
+            {
+                builder.OpenElement(14, "div");
+                builder.AddAttribute(15, "class", "presence-badge absent");
+                builder.AddContent(16, "✗ Absent");
+                builder.CloseElement();
+            }
+
+            builder.CloseElement(); 
+        }
+        else
+        {
+            builder.OpenElement(17, "div");
+            builder.AddAttribute(18, "class", "cell-empty-text");
+            builder.AddContent(19, "+ Ajouter");
+            builder.CloseElement();
+        }
+
+        builder.CloseElement(); 
+    };
+
+    private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
+    {
+        EditingFeuille = feuille;
+        ModalDate = date;
+        ModalEstMatin = estMatin;
+
+        if (feuille != null)
+        {
+            ModalEstPresent = feuille.EstPresent;
+            ModalProjetId = feuille.ProjetId;
+            ModalCommentaire = feuille.Commentaire;
+        }
+        else
+        {
+            ModalEstPresent = true;
+            ModalProjetId = null;
+            ModalCommentaire = null;
+        }
+
+        ShowModal = true;
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        EditingFeuille = null;
+    }
+
+    private async Task SaveFeuille()
+    {
+        try
+        {
+            if (EditingFeuille != null)
+            {
+                var updateDto = new FeuilleTempsUpdateDTO
+                {
+                    Id = EditingFeuille.Id,
+                    Commentaire = ModalCommentaire
+                };
+                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
+            }
+            else
+            {
+                var createDto = new FeuilleTempsCreateDTO
+                {
+                    Date = ModalDate,
+                    EstMatin = ModalEstMatin,
+                    EstPresent = ModalEstPresent,
+                    ProjetId = ModalProjetId,
+                    Commentaire = ModalCommentaire
+                };
+                await FeuilleTempsService.Post(createDto);
+            }
+
+            await LoadData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de l'enregistrement : {ex.Message}");
+        }
+    }
+
+    private class JourSemaine
+    {
+        public string Nom { get; set; } = "";
+        public DateTime Date { get; set; }
     }
 }

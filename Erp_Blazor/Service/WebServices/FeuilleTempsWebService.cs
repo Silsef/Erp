@@ -12,7 +12,16 @@ namespace Erp_Blazor.Service.WebServices
 
         public async Task<List<FeuilleTempsDTO>> GetBySemaine(int employeId, int numSemaine, int? annee = null)
         {
-            var url = $"{_endpoint}/GetBySemaine/{employeId}/{numSemaine}";
+            string url;
+            
+            if (employeId == 0)
+            {
+                url = $"{_endpoint}/GetBySemaine/{numSemaine}";
+            }
+            else
+            {
+                url = $"{_endpoint}/GetBySemaine/{employeId}/{numSemaine}";
+            }
 
             if (annee.HasValue)
             {
