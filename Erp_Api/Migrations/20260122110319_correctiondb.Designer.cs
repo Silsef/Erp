@@ -3,6 +3,7 @@ using System;
 using Erp_Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erp_Api.Migrations
 {
     [DbContext(typeof(ErpBdContext))]
-    partial class ErpBdContextModelSnapshot : ModelSnapshot
+    [Migration("20260122110319_correctiondb")]
+    partial class correctiondb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -515,7 +518,7 @@ namespace Erp_Api.Migrations
 
                     b.Property<int?>("EmployeAssigneId")
                         .HasColumnType("integer")
-                        .HasColumnName("tac_employe_assigne_id");
+                        .HasColumnName("tacemployeassigne_id");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -690,9 +693,8 @@ namespace Erp_Api.Migrations
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Projet", b =>
                 {
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Employe", "EmployeResponsable")
-                        .WithMany("ProjetsResponsable")
-                        .HasForeignKey("EmployeResponsableId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("EmployeResponsableId");
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Entite", "EntiteCliente")
                         .WithMany("ProjetsCommandes")
@@ -714,9 +716,8 @@ namespace Erp_Api.Migrations
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Employe", "EmployeAssigne")
-                        .WithMany("TachesAssignees")
-                        .HasForeignKey("EmployeAssigneId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("EmployeAssigneId");
 
                     b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.Projet", "Projet")
                         .WithMany("Taches")
@@ -780,10 +781,6 @@ namespace Erp_Api.Migrations
                     b.Navigation("EmployeEntites");
 
                     b.Navigation("Employeroles");
-
-                    b.Navigation("ProjetsResponsable");
-
-                    b.Navigation("TachesAssignees");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Entite", b =>

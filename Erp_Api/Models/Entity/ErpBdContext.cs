@@ -101,9 +101,22 @@ namespace Erp_Api.Models.Entity
 
             modelBuilder.Entity<Tache>()
                 .HasOne(t => t.Projet)
-                .WithMany(p => p.Taches)    
+                .WithMany(p => p.Taches)
                 .HasForeignKey(t => t.ProjetId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Tache>()
+                .HasOne(t => t.EmployeAssigne)
+                .WithMany(e => e.TachesAssignees)
+                .HasForeignKey(t => t.EmployeAssigneId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Projet>()
+                .HasOne(p => p.EmployeResponsable)
+                .WithMany(e => e.ProjetsResponsable)
+                .HasForeignKey(p => p.EmployeResponsableId)
+                .OnDelete(DeleteBehavior.SetNull);
+
 
             OnModelCreatingPartial(modelBuilder);
 

@@ -38,5 +38,8 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public string NumSecuriteSociale { get; set; } = null!;
         public ICollection<EmployeEntite> EmployeEntites { get; set; } = new List<EmployeEntite>();
         public ICollection<A_Pour_Role> Employeroles { get; set; } = new List<A_Pour_Role>();
+        public ICollection<Tache> TachesAssignees { get; set; } = new List<Tache>();
+        public ICollection<Projet> ProjetsResponsable { get; set; } = new List<Projet>();
+
     }
 }

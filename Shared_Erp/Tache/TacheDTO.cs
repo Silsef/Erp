@@ -44,7 +44,7 @@ namespace Shared_Erp.Tache
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
         public StatutTache Statut { get; set; }
-        public NiveauPriorite Priorite { get; set; } // Changé de int à NiveauPriorite
+        public NiveauPriorite Priorite { get; set; } 
         public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }
         public int? TacheParenteId { get; set; }
