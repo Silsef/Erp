@@ -60,11 +60,15 @@ namespace Erp_Api.Mapper
             CreateMap<Projet, ProjetUpdateDTO>().ReverseMap();
 
             CreateMap<Tache, TacheDTO>()
-                .ForMember(d => d.ProjetId, opt => opt.MapFrom(src => src.ProjetId))
-                .ForMember(d => d.EmployeAssigne, opt => opt.MapFrom(src => src.EmployeAssigneId))
-                .ForMember(d => d.TacheParenteId, opt => opt.MapFrom(src => src.TacheParenteId))
+            .ForMember(d => d.EmployeAssigneId, opt => opt.MapFrom(src => src.EmployeAssigneId))
+            .ForMember(d => d.ProjetId, opt => opt.MapFrom(src => src.ProjetId))
+            .ForMember(d => d.TacheParenteId, opt => opt.MapFrom(src => src.TacheParenteId))
+            .ForMember(d => d.ProjetNom, opt => opt.MapFrom(src => src.Projet != null ? src.Projet.Nom : null))
+            .ForMember(d => d.EmployeAssigneNom, opt => opt.MapFrom(src => src.EmployeAssigne != null ? $"{src.EmployeAssigne.Prenom} {src.EmployeAssigne.Nom}" : null))
+            .ReverseMap();
 
-                .ReverseMap();
+            CreateMap<TacheCreateDTO, Tache>();
+            CreateMap<TacheUpdateDTO, Tache>();
         }
     }
 }

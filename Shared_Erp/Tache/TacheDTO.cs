@@ -17,32 +17,36 @@ namespace Shared_Erp.Tache
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
         public StatutTache Statut { get; set; }
-        public int Priorite { get; set; }
+        public NiveauPriorite Priorite { get; set; }
         public int? ProjetId { get; set; }
-        public int? EmployeAssigne { get; set; }
+        public int? EmployeAssigneId { get; set; } 
         public int? TacheParenteId { get; set; }
-
+        public string? ProjetNom { get; set; }
+        public string? EmployeAssigneNom { get; set; }
     }
 
     public class TacheCreateDTO
     {
-        public string Titre { get; set; } = null!;
+        public string Nom { get; set; } = null!;
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public int Priorite { get; set; }
-        public int ProjetId { get; set; }
+        public NiveauPriorite Priorite { get; set; }
+        public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }
+        public int? TacheParenteId { get; set; }
     }
+
     public class TacheUpdateDTO
     {
-        public string Titre { get; set; } = null!;
+        public string Nom { get; set; } = null!;
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
         public StatutTache Statut { get; set; }
-        public int Priorite { get; set; }
-        public int ProjetId { get; set; }
+        public NiveauPriorite Priorite { get; set; } // Changé de int à NiveauPriorite
+        public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }
+        public int? TacheParenteId { get; set; }
     }
-    }
+}
