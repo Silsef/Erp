@@ -18,8 +18,9 @@ namespace Shared_Erp.Tache
         public DateTime? DateFin { get; set; }
         public StatutTache Statut { get; set; }
         public int Priorite { get; set; }
-        public ProjetDTO? ProjetId { get; set; }
-        public EmployeDTO? EmployeAssigne { get; set; }
+        public int? ProjetId { get; set; }
+        public int? EmployeAssigne { get; set; }
+
     }
 
     public class TacheCreateDTO

@@ -15,5 +15,13 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
         {
                return await dbSet.FirstOrDefaultAsync(t => t.Nom == name);
         }
+
+        public override async Task<IEnumerable<Tache>> GetAllAsync()
+        {
+            return await dbSet
+                .Include(t=>t.EmployeAssigne)
+                .Include(t=>t.Projet)
+                .ToListAsync();
+        }
     }
 }

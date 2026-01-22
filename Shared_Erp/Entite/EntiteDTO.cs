@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Shared_Erp.Adresse;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace Shared_Erp.Entite
 {
@@ -20,6 +22,7 @@ namespace Shared_Erp.Entite
         public string Nom { get; set; } = null!;
         public string? Telephone { get; set; }
         public bool EstEntreprise { get; set; } = true;
+        public AdresseCreateDTO Adresse { get; set; } = null!;
     }
 
     public class EntiteUpdateDTO

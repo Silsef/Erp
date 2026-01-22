@@ -1,0 +1,39 @@
+﻿@using Service.Interfaces
+@inject IEntiteService EntiteService
+
+
+<div>
+    <h3>Créer une Nouvelle Entité</h3>
+    <div>
+        <div>
+            <div>
+                <p>Nom de l'Entité</p>
+                   <input type="text" name="name" @bind="NewEntite.Nom" />
+            </div>
+
+            <div>
+                <p>Téléphone de l'Entité</p>
+                <input type="text" name="name" @bind="NewEntite.Telephone" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Type de l'Entité</label>
+            <select class="form-select" @bind="NewEntite.EstEntreprise">
+                <option value=true >Oui</option>
+                <option value=False>Non</option>
+            </select>
+        </div>
+
+    </div>
+
+
+</div>
+
+@code{
+    private EntiteCreateDTO NewEntite = new EntiteCreateDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        NewEntite = new EntiteCreateDTO();
+    }
+}
