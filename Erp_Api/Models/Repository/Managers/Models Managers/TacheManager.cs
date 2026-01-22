@@ -25,5 +25,14 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(t=>t.SousTaches)
                 .ToListAsync();
         }
+        public override async Task<Tache?> GetByIdAsync(int id)
+        {
+            return await dbSet
+                .Include(t => t.EmployeAssigne)
+                .Include(t => t.Projet)
+                .Include(t => t.TacheParente)
+                .Include(t => t.SousTaches)
+                .FirstOrDefaultAsync(t => t.Id == id);
+        }
     }
 }

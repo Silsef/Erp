@@ -25,7 +25,6 @@ namespace Shared_Erp.FeuilleTemps
         public DateTime Date { get; set; }
         public bool EstMatin { get; set; }
         public bool EstPresent { get; set; }
-        public int EmployeId { get; set; }
         public int? ProjetId { get; set; }
         public string? Commentaire { get; set; }
     }

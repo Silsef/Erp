@@ -66,7 +66,6 @@ namespace Erp_Api.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<LoginResponseDTO>> Register([FromBody] RegisterRequestDTO request)
         {
-            // Vérifier si l'email existe déjà
             var existingUser = await _employeManager.GetByEmailLoginAsync(request.Email);
             if (existingUser != null)
                 return BadRequest(new { message = "Un compte avec cet email existe déjà" });

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Erp_Api.Models.Entity.Tables.Entitees;
 using Erp_Api.Models.Repository.Managers.Models_Managers;
+using Microsoft.AspNetCore.Mvc;
 using Shared_Erp.Tache;
 
 namespace Erp_Api.Controllers
@@ -12,7 +13,16 @@ namespace Erp_Api.Controllers
         {
         }
         protected override int GetEntityId(Tache entity) => entity.Id;
-   
-    
+
+        [HttpPost]
+        public override async Task<ActionResult<TacheDTO>> Create([FromBody] TacheCreateDTO dto)
+        {
+            var entity = _mapper.Map<Tache>(dto);
+            var result = await _manager.AddAsync(entity);
+
+            var resultWithIncludes = await _manager.GetByIdAsync(result.Id);
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<TacheDTO>(resultWithIncludes));
+        }
     }
 }
