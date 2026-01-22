@@ -40,5 +40,6 @@ builder.Services.AddScoped<IOffreService, OffreWebService>();
 builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
 builder.Services.AddScoped<IEntretienService, EntretienWebService>();
 builder.Services.AddScoped<IEntiteService, EntiteWebService>();
+builder.Services.AddScoped<IFeuilleTempsService, FeuilleTempsWebService>();
 
 await builder.Build().RunAsync();

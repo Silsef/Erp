@@ -21,6 +21,8 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(p => p.EntiteRealisatrice)
                 .Include(p => p.EntiteCliente)
                 .Include(p => p.EmployeResponsable)
+                .Include(p => p.Taches)
+                .ThenInclude(d=>d.EmployeAssigne)
                 .ToListAsync();
         }
     }
