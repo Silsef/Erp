@@ -1,7 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthStateProvider
 @using System.Security.Claims
+@using Erp_Blazor.Service.States
 @inject IEntiteService EntiteService
+@inject EntiteState EntiteState
 
 <div class="page">
     <div class="sidebar">
@@ -62,6 +64,7 @@
             if (user.Identity is not null && user.Identity.IsAuthenticated)
             {
                 Entites = await EntiteService.GetByIdEmploye(Convert.ToInt32(user.FindFirst(ClaimTypes.NameIdentifier)?.Value));
+                SelectedEntite = Entites.FirstOrDefault(e => e.Id == EntiteState.SelectedEntiteId) ?? Entites.FirstOrDefault();
             }
         }
     }
@@ -69,6 +72,7 @@
     private void SelectEntite(EntiteDTO id)
     {
         SelectedEntite = id;
+        EntiteState.SelectedEntiteId =id.Id;
         StateHasChanged();
     }
 

@@ -25,5 +25,29 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .ThenInclude(d=>d.EmployeAssigne)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Projet>> GetProjetsDemandeByEntiteId(int entiteId)
+        {
+            return await dbSet
+               .Include(p => p.EntiteRealisatrice)
+               .Include(p => p.EntiteCliente)
+               .Include(p => p.EmployeResponsable)
+               .Include(p => p.Taches)
+               .ThenInclude(d => d.EmployeAssigne)
+               .Where(d=> d.EntiteClienteId == entiteId)
+               .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Projet>> GetProjetsRealiseByEntiteId(int entiteId)
+        {
+            return await dbSet
+               .Include(p => p.EntiteRealisatrice)
+               .Include(p => p.EntiteCliente)
+               .Include(p => p.EmployeResponsable)
+               .Include(p => p.Taches)
+               .ThenInclude(d => d.EmployeAssigne)
+               .Where(d => d.EntiteRealisatriceId == entiteId)
+               .ToListAsync();
+        }
     }
 }

@@ -9,9 +9,11 @@ namespace Erp_Api.Controllers
 {
     public class ProjetController : BaseController<Projet, ProjetDTO, ProjetCreateDTO, ProjetUpdateDTO, string>
     {
+        public ProjetManager projetmanager;
         public ProjetController(ProjetManager manager, IMapper mapper)
             : base(manager, mapper)
         {
+            projetmanager = manager;
         }
 
         protected override int GetEntityId(Projet entity) => entity.Id;
@@ -33,5 +35,22 @@ namespace Erp_Api.Controllers
             var result = await _manager.AddAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<ProjetDTO>(result));
         }
+
+        [HttpGet("{entiteId}")]
+        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsDemandeByEntiteId(int entiteId)
+        {
+            var projets = await projetmanager.GetProjetsDemandeByEntiteId(entiteId);
+
+            return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
+        }
+
+        [HttpGet("{entiteId}")]
+        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsResaliseByEntiteId(int entiteId)
+        {
+            var projets = await projetmanager.GetProjetsRealiseByEntiteId(entiteId);
+
+            return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
+        }
+
     }
 }

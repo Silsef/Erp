@@ -60,6 +60,7 @@ namespace Erp_Api.Mapper
                 .ForMember(d=> d.EmployeResponsablePrenom, opt => opt.MapFrom(src => src.EmployeResponsable.Prenom))
                 .ForMember(d=> d.EntiteClienteNom, opt => opt.MapFrom(src => src.EntiteRealisatrice.Nom))
                 .ForMember(d=> d.EntiteClienteNom, opt => opt.MapFrom(src => src.EntiteCliente.Nom))
+                .ForMember(d=>d.Taches, opt => opt.Ignore())
                 .ReverseMap();
             CreateMap<Projet, ProjetCreateDTO>().ReverseMap();
             CreateMap<Projet, ProjetUpdateDTO>().ReverseMap();

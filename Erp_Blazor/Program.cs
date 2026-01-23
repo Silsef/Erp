@@ -2,10 +2,12 @@ using Blazored.LocalStorage;
 using Erp_Blazor;
 using Erp_Blazor.Service.Interfaces;
 using Erp_Blazor.Service.Security;
+using Erp_Blazor.Service.States;
 using Erp_Blazor.Service.WebServices;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using System.Net.NetworkInformation;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -49,5 +51,8 @@ builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
 builder.Services.AddScoped<IEntretienService, EntretienWebService>();
 builder.Services.AddScoped<IFeuilleTempsService, FeuilleTempsWebService>();
 builder.Services.AddScoped<ITacheService, TacheWebService>();
+
+
+builder.Services.AddScoped<EntiteState>();
 
 await builder.Build().RunAsync();
