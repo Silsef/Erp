@@ -173,7 +173,7 @@ namespace Erp_Api.Controllers
 
             var claims = new[]
             {
-                new Claim("id", employeId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, employeId.ToString()),                
                 new Claim(ClaimTypes.Email, email),
                 new Claim("nom", nom),
                 new Claim("prenom", prenom),

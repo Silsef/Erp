@@ -9,6 +9,7 @@
 @inject IEntiteService EntiteService
 @inject IFeuilleTempsService FeuilleTempsService
 @inject IEmployeService EmployeService
+@inject ITacheService TacheService
 @attribute [Authorize]
 
 
@@ -103,6 +104,9 @@
                             </div>
                         </div>
                     }
+                    <div @onclick"" >
+                        + Ajouter une Tâche 
+                    </div>
                 }
 
                 @if (ActiveTab == "calendrier")
@@ -112,7 +116,6 @@
                             <h3>📅 Feuilles de temps - @SelectedProjet.Nom</h3>
 
                             <div class="controls-row">
-                                <!-- Sélection de l'employé (uniquement les employés du projet) -->
                                 <div class="control-group">
                                     <label>Employé :</label>
                                     <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
@@ -302,14 +305,91 @@
     </div>
 }
 
+@* --- MODAL DE CRÉATION DE TACHE --- *@
+@if (showcreateTacheModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer une nouvelle Tache</h5>
+                    <button type="button" class="btn-close" @onclick="() => showcreateTacheModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Nom de la tache</label>
+                            <input class="form-control" @bind="NewTache.Nom" placeholder="Changement outillage PAOMI" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" @bind="NewTache.Description" placeholder="Détails de la tache..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date de début</label>
+                                <input type="date" class="form-control" @bind="NewTache.DateDebut" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priorité</label>
+                                <select class="form-select" @bind="NewTache.Priorite">
+                                    @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
+                                    {
+                                        <option value="@((int)niveau)">@niveau</option>
+                                    }
+                                </select>
+                            </div>
+
+
+                        </div>
+                        
+
+                        <div class="mb-3">
+                            <label class="form-label">Entité Réalisatrice</label>
+                            <select class="form-select" @bind="NewProjet.EntiteRealisatriceId">
+                                <option value="">-- Sélectionner une entité --</option>
+                                @foreach (var ent in Entites)
+                                {
+                                    <option value="@ent.Id">@ent.Nom</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Entité Cliente</label>
+                            <select class="form-select" @bind="NewProjet.EntiteClienteId">
+                                <option value="">-- Sélectionner une entité --</option>
+                                @foreach (var ent in Entites)
+                                {
+                                    <option value="@ent.Id">@ent.Nom</option>
+                                }
+                            </select>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveNewProjet">Créer Projet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     // Projets
     private List<ProjetDTO> Projets = new List<ProjetDTO>();
     private List<EntiteDTO> Entites = new List<EntiteDTO>();
+    private List<TacheDTO> Taches = new List<TacheDTO>();
     private ProjetDTO? SelectedProjet;
     private TacheDTO? SelectedTache;
     private bool showcreateProjetModal = false;
+    private bool showcreateTacheModal = false;
     private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
+    private TacheCreateDTO NewTache = new TacheCreateDTO();
     private string ActiveTab = "overview";
 
     // Calendrier
@@ -343,10 +423,11 @@
         Annee = now.Year;
     }
 
-    private void SelectProjet(ProjetDTO projet)
+    private async void SelectProjet(ProjetDTO projet)
     {
         SelectedProjet = projet;
         ActiveTab = "overview";
+        Taches = await TacheService.GetTachesByProjetId(projet.Id);
     }
 
     private void SelectTache(TacheDTO tache)
@@ -362,6 +443,26 @@
             Priorite = (int)NiveauPriorite.Normale
         };
         showcreateProjetModal = true;
+    }
+
+    private async void CreateNewTache()
+    {
+        NewTache = new TacheCreateDTO
+        {
+            DateDebut = DateTime.Now,
+            Priorite = (int)NiveauPriorite.Normale
+        };
+        showcreateTacheModal = true;
+    }
+
+    private async Task SaveNewTache()
+    {
+        if (string.IsNullOrWhiteSpace(NewTache.Nom)) return;
+
+        var createdTache = await TacheService.Post(NewTache);
+        Taches.Add(createdTache);
+        SelectedTache = createdTache;
+        showcreateTacheModal = false;
     }
 
     private async Task SaveNewProjet()

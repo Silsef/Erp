@@ -8,9 +8,12 @@ namespace Erp_Api.Controllers
 {
     public class TacheController : BaseController<Tache, TacheDTO, TacheCreateDTO, TacheUpdateDTO, string>
     {
+        public TacheManager tachemanager;
         public TacheController(TacheManager manager, IMapper mapper)
             : base(manager, mapper)
         {
+            tachemanager = manager;
+
         }
         protected override int GetEntityId(Tache entity) => entity.Id;
 
@@ -23,6 +26,14 @@ namespace Erp_Api.Controllers
             var resultWithIncludes = await _manager.GetByIdAsync(result.Id);
 
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<TacheDTO>(resultWithIncludes));
+        }
+
+        [HttpGet("{idprojet}")]
+        public async Task<ActionResult<IEnumerable<TacheDTO>>> GetTachesByProjetId(int idprojet)
+        {
+            var taches = await tachemanager.GetByProjet(idprojet);
+
+            return Ok(_mapper.Map<IEnumerable<TacheDTO>>(taches));
         }
     }
 }
