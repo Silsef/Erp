@@ -284,6 +284,23 @@
         border-left-color: #dc3545;
     }
 
+
+.bulle-priority-Basse {
+    background-color: #28a745;
+}
+
+.bulle-priority-Normale {
+    background-color: #17a2b8;
+}
+
+.bulle-priority-Haute {
+    background-color: #ffc107;
+}
+
+.bulle-priority-Urgente {
+    background-color: #dc3545;
+}
+
 .task-header {
     display: flex;
     justify-content: space-between;

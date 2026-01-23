@@ -21,6 +21,7 @@ namespace Erp_Api.Controllers
         public override async Task<ActionResult<TacheDTO>> Create([FromBody] TacheCreateDTO dto)
         {
             var entity = _mapper.Map<Tache>(dto);
+
             var result = await _manager.AddAsync(entity);
 
             var resultWithIncludes = await _manager.GetByIdAsync(result.Id);

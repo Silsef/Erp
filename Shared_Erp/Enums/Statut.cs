@@ -8,15 +8,15 @@ namespace Shared_Erp.Enums
 {
     public enum StatutTache
     {
-        AFaire = 0,
-        EnCours = 1,
-        EnAttente = 2,
+        A_Faire = 0,
+        En_Cours = 1,
+        En_Attente = 2,
         Termine = 3,
         Bloque = 4
     }
     public enum Statut
     {
-        EnAttente = 0,
+        En_Attente = 0,
         Validé = 1,
         Refusé = 2,
         Archivé = 3

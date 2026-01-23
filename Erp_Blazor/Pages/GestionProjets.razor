@@ -98,42 +98,97 @@
 
                 @if (ActiveTab == "taches")
                 {
-                    <div class="task-grid animate fade-in">
-                        @foreach (var tache in SelectedProjet.Taches)
-                        {
-                            <div class="task-card priority-@GetPriorityColor(tache.Priorite)" @onclick="() => SelectTache(tache)">
-                                <div class="task-header">
-                                    <span class="task-title">@tache.Nom</span>
-                                    <span class="badge rounded-pill bg-light text-dark border">
-                                        @tache.Priorite
-                                    </span>
-                                </div>
+                    @if (SelectedTache != null)
+                    {
+                        <div class="animate fade-in">
+                            <div class="d-flex align-items-center mb-4">
+                                <button class="btn btn-outline-secondary btn-sm me-3" @onclick="() => SelectedTache = null">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </button>
+                                <h3 class="m-0">@SelectedTache.Nom</h3>
+                                <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(SelectedTache.Priorite)">
+                                    @SelectedTache.Priorite
+                                </span>
+                            </div>
 
-                                <div class="task-meta">
-                                    <div class="task-meta-item">
-                                        <i class="bi bi-person-circle"></i>
-                                        <span>@(tache.EmployeAssigneNom ?? "Non assigné")</span>
-                                    </div>
-                                    <div class="task-meta-item">
-                                        <i class="bi bi-calendar-event"></i>
-                                        <span>@tache.DateDebut.ToShortDateString()</span>
-                                    </div>
-                                    @if (tache.Statut != StatutTache.AFaire)
-                                    {
-                                        <div class="task-meta-item">
-                                            <i class="bi bi-info-circle"></i>
-                                            <span>@tache.Statut</span>
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <h5 class="text-muted mb-3">Description</h5>
+                                            <p>@(string.IsNullOrEmpty(SelectedTache.Description) ? "Aucune description" : SelectedTache.Description)</p>
                                         </div>
-                                    }
+                                        <div class="col-md-4 border-start">
+                                            <h5 class="text-muted mb-3">Informations</h5>
+
+                                            <div class="mb-2">
+                                                <i class="bi bi-person-circle me-2 text-primary"></i>
+                                                <strong>Assigné à :</strong>
+                                                <span class="d-block ms-4">@(SelectedTache.EmployeAssigneNom ?? "Non assigné")</span>
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <i class="bi bi-calendar-event me-2 text-primary"></i>
+                                                <strong>Dates :</strong>
+                                                <span class="d-block ms-4">
+                                                    du @SelectedTache.DateDebut.ToShortDateString()
+                                                    @if (SelectedTache.DateFin.HasValue)
+                                                    {
+                                                        <span> au @SelectedTache.DateFin.Value.ToShortDateString()</span>
+                                                    }
+                                                </span>
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <i class="bi bi-flag me-2 text-primary"></i>
+                                                <strong>Statut :</strong>
+                                                <span class="d-block ms-4">@SelectedTache.Statut.ToString().Replace(",","")</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        }
-
-                        <div class="task-card add-task-card" @onclick="CreateNewTache">
-                            <i class="bi bi-plus-circle fs-2 mb-2"></i>
-                            <span>Nouvelle Tâche</span>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="task-grid animate fade-in">
+                            @foreach (var tache in Taches)
+                            {
+                                <div class="task-card priority-@GetPriorityColor(tache.Priorite)" @onclick="() => SelectTache(tache)">
+                                    <div class="task-header">
+                                        <span class="task-title">@tache.Nom</span>
+                                        <span class="badge rounded-pill bulle-priority-@GetPriorityColor(tache.Priorite)">
+                                            @tache.Priorite
+                                        </span>
+                                    </div>
+
+                                    <div class="task-meta">
+                                        <div class="task-meta-item">
+                                            <i class="bi bi-person-circle"></i>
+                                            <span>@(tache.EmployeAssigneNom ?? "Non assigné")</span>
+                                        </div>
+                                        <div class="task-meta-item">
+                                            <i class="bi bi-calendar-event"></i>
+                                            <span>@tache.DateDebut.ToShortDateString()</span>
+                                        </div>
+                                        @if (tache.Statut != StatutTache.A_Faire)
+                                        {
+                                            <div class="task-meta-item bulle-priority-@GetPriorityColor(tache.Priorite)">
+                                                <i class="bi bi-info-circle "></i>
+                                                <span class="">@tache.Statut.ToString().Replace("_","")</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="task-card add-task-card" @onclick="CreateNewTache">
+                                <i class="bi bi-plus-circle fs-2 mb-2"></i>
+                                <span>Nouvelle Tâche</span>
+                            </div>
+                        </div>
+                    }
                 }
 
                 @if (ActiveTab == "calendrier")
@@ -258,6 +313,7 @@
                 }
             </div>
         }
+   
     </div>
 </div>
 
@@ -427,6 +483,7 @@
     protected override async Task OnInitializedAsync()
     {
         Projets = await ProjetService.GetAll();
+        
         Entites = await EntiteService.GetAll();
 
         NewProjet.DateDebut = DateTime.Now;
@@ -494,8 +551,10 @@
 
         var createdTache = await TacheService.Post(NewTache);
         Taches.Add(createdTache);
+        
         SelectedTache = createdTache; 
         showcreateTacheModal = false;
+            await InvokeAsync(StateHasChanged);
         }
         catch(Exception ex)
         {
@@ -527,7 +586,6 @@
     {
         if (SelectedProjet == null) return;
 
-        // Récupérer tous les employés qui ont des tâches sur ce projet
         EmployesDuProjet = SelectedProjet.Taches
             .Where(t => t.EmployeAssigneId.HasValue)
             .GroupBy(t => t.EmployeAssigneId)

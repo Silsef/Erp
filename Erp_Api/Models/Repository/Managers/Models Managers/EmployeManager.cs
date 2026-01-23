@@ -30,5 +30,24 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                     .Include(a=> a.Employeroles)
                 .FirstOrDefaultAsync(e => e.Email == email  ||  e .Login == email);
         }
+
+        public async Task<IEnumerable<Employe>> GetEmployeesByEntiteEtProjet(int entiteId,int? idprojet)
+        {
+            var query = dbSet.AsQueryable();
+
+            query = query
+                .Include(a => a.EmployeEntites)
+                .Include(a => a.Employeroles)
+                .ThenInclude(a => a.Role);
+
+            if (idprojet !=null && idprojet !=0)
+            {
+                query = query.Where(a=>a.TachesAssignees.Any(a=>a.ProjetId == idprojet));
+                query = query.Where(a=>a.ProjetsResponsable.Any(a=>a.Id == idprojet));
+            }
+
+            return await dbSet
+                .Where(e=>e.EmployeEntites.Any(ee=>ee.EntiteId == entiteId)).ToListAsync();
+        }
     }
 }

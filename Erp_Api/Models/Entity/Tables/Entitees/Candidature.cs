@@ -48,7 +48,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         [Column("can_status_id")]
         public int? StatusId { get; set; }
-        public Statut? Status { get; set; } =Statut.EnAttente;
+        public Statut? Status { get; set; } =Statut.En_Attente;
 
         [Column("can_plateforme_id")]
         public int? PlateformeId { get; set; }

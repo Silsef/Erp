@@ -5,5 +5,6 @@ namespace Erp_Api.Models.Repository.Interfaces
     public interface IEmployeRepository
     {
         Task<Employe?> GetByEmailLoginAsync(string email);
+        Task<IEnumerable<Employe>> GetEmployeesByEntiteEtProjet(int entiteId, int? idprojet);
     }
 }

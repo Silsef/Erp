@@ -38,7 +38,7 @@ namespace Erp_Api.Controllers
             }
             else
             {
-                var userIdClaim = User.FindFirst("id")?.Value;
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out effectiveEmployeId))
                 {
                     return Unauthorized("Utilisateur non authentifié");
@@ -53,7 +53,7 @@ namespace Erp_Api.Controllers
         {
             var entity = _mapper.Map<FeuilleTemps>(createDto);
 
-            var userIdString = User.FindFirst("id")?.Value;
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (int.TryParse(userIdString, out int userId))
             {

@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
+@inject IEntiteService EntiteService
 
 <div class="page">
     <div class="sidebar">
@@ -13,17 +15,21 @@
                     <div class="left">
                         <span class="date">📅 @DateTime.Now.ToString("dd/MM/yyyy")</span>
                     </div>
-                    @{
-                        var email = context.User.FindFirst(ClaimTypes.Email)?.Value;
-                        var nom = context.User.FindFirst("nom")?.Value;
-                        var prenom = context.User.FindFirst("prenom")?.Value;
 
-                        var displayName = !string.IsNullOrEmpty(prenom) && !string.IsNullOrEmpty(nom)
-                        ? $"{prenom} {nom}"
-                        : email ?? context.User.Identity?.Name ?? "Utilisateur";
-                    }
+                    <div class="center">
+                        @foreach (var entite in Entites)
+                        {
+                            var isSelected = SelectedEntite?.Id == entite.Id;
+
+                            <span class="entite @(isSelected ? "selected" : "") me-3"
+                                  @onclick="@(() => SelectEntite(entite))">
+                                @entite.Nom
+                            </span>
+                        }
+                    </div>
+
                     <div class="right">
-                        <span class="me-3">Bonjour, <strong>@displayName</strong></span>
+                        <span class="me-3">Bonjour, <strong>@DisplayName</strong></span>
                         <a href="logout">Déconnexion</a>
                     </div>
                 </Authorized>
@@ -42,4 +48,48 @@
 @code {
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    private List<EntiteDTO> Entites= new List<EntiteDTO>();
+    private EntiteDTO? SelectedEntite;
+
+    private string DisplayName { get; set; } = "Utilisateur";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask is not null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                Entites = await EntiteService.GetByIdEmploye(Convert.ToInt32(user.FindFirst(ClaimTypes.NameIdentifier)?.Value));
+            }
+        }
+    }
+
+    private void SelectEntite(EntiteDTO id)
+    {
+        SelectedEntite = id;
+        StateHasChanged();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthenticationStateTask is not null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                var email = user.FindFirst(ClaimTypes.Email)?.Value;
+                var nom = user.FindFirst("nom")?.Value;
+                var prenom = user.FindFirst("prenom")?.Value;
+
+                DisplayName = !string.IsNullOrEmpty(prenom) && !string.IsNullOrEmpty(nom)
+                    ? $"{prenom} {nom}"
+                    : email ?? user.Identity.Name ?? "Utilisateur";
+                    
+            }
+        }
+    }
 }
