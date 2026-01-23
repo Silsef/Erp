@@ -30,7 +30,6 @@ namespace Shared_Erp.Tache
         public string Nom { get; set; } = null!;
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
-        public DateTime? DateFin { get; set; }
         public NiveauPriorite Priorite { get; set; }
         public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }

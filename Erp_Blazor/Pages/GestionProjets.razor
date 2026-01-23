@@ -11,7 +11,9 @@
 @inject IEmployeService EmployeService
 @inject ITacheService TacheService
 @attribute [Authorize]
-
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
 
 <h3>Gestion des Projets</h3>
 
@@ -96,16 +98,41 @@
 
                 @if (ActiveTab == "taches")
                 {
-                    @foreach (var tache in SelectedProjet.Taches)
-                    {
-                        <div>
-                            <div class="" @onclick="() => SelectTache(tache)">
-                                @tache.Nom @tache.EmployeAssigneNom
+                    <div class="task-grid animate fade-in">
+                        @foreach (var tache in SelectedProjet.Taches)
+                        {
+                            <div class="task-card priority-@GetPriorityColor(tache.Priorite)" @onclick="() => SelectTache(tache)">
+                                <div class="task-header">
+                                    <span class="task-title">@tache.Nom</span>
+                                    <span class="badge rounded-pill bg-light text-dark border">
+                                        @tache.Priorite
+                                    </span>
+                                </div>
+
+                                <div class="task-meta">
+                                    <div class="task-meta-item">
+                                        <i class="bi bi-person-circle"></i>
+                                        <span>@(tache.EmployeAssigneNom ?? "Non assigné")</span>
+                                    </div>
+                                    <div class="task-meta-item">
+                                        <i class="bi bi-calendar-event"></i>
+                                        <span>@tache.DateDebut.ToShortDateString()</span>
+                                    </div>
+                                    @if (tache.Statut != StatutTache.AFaire)
+                                    {
+                                        <div class="task-meta-item">
+                                            <i class="bi bi-info-circle"></i>
+                                            <span>@tache.Statut</span>
+                                        </div>
+                                    }
+                                </div>
                             </div>
+                        }
+
+                        <div class="task-card add-task-card" @onclick="CreateNewTache">
+                            <i class="bi bi-plus-circle fs-2 mb-2"></i>
+                            <span>Nouvelle Tâche</span>
                         </div>
-                    }
-                    <div @onclick"" >
-                        + Ajouter une Tâche 
                     </div>
                 }
 
@@ -266,7 +293,7 @@
                                 <select class="form-select" @bind="NewProjet.Priorite">
                                     @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
                                     {
-                                        <option value="@((int)niveau)">@niveau</option>
+                                        <option value="@niveau">@niveau</option>
                                     }
                                 </select>
                             </div>
@@ -337,33 +364,20 @@
                                 <select class="form-select" @bind="NewTache.Priorite">
                                     @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
                                     {
-                                        <option value="@((int)niveau)">@niveau</option>
+                                        <option value="@niveau">@niveau</option>
                                     }
                                 </select>
                             </div>
-
-
                         </div>
                         
 
                         <div class="mb-3">
-                            <label class="form-label">Entité Réalisatrice</label>
-                            <select class="form-select" @bind="NewProjet.EntiteRealisatriceId">
-                                <option value="">-- Sélectionner une entité --</option>
-                                @foreach (var ent in Entites)
+                            <label class="form-label">Tache Parente</label>
+                            <select class="form-select" @bind="NewTache.TacheParenteId">
+                                <option value="">-- Sélectionner une Tache --</option>
+                                @foreach (var tac in Taches)
                                 {
-                                    <option value="@ent.Id">@ent.Nom</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Entité Cliente</label>
-                            <select class="form-select" @bind="NewProjet.EntiteClienteId">
-                                <option value="">-- Sélectionner une entité --</option>
-                                @foreach (var ent in Entites)
-                                {
-                                    <option value="@ent.Id">@ent.Nom</option>
+                                    <option value="@tac.Id">@tac.Nom</option>
                                 }
                             </select>
                         </div>
@@ -371,8 +385,8 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
-                    <button type="button" class="btn btn-primary" @onclick="SaveNewProjet">Créer Projet</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateTacheModal = false">Annuler</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveNewTache">Créer Tache</button>
                 </div>
             </div>
         </div>
@@ -416,7 +430,7 @@
         Entites = await EntiteService.GetAll();
 
         NewProjet.DateDebut = DateTime.Now;
-        NewProjet.Priorite = (int)NiveauPriorite.Normale;
+        NewProjet.Priorite = NiveauPriorite.Normale;
 
         var now = DateTime.Now;
         NumSemaine = ISOWeek.GetWeekOfYear(now);
@@ -435,22 +449,22 @@
         SelectedTache = tache;
     }
 
-    private async void CreateNewProjet()
+    private void CreateNewProjet()
     {
         NewProjet = new ProjetCreateDTO
         {
             DateDebut = DateTime.Now,
-            Priorite = (int)NiveauPriorite.Normale
+            Priorite = NiveauPriorite.Normale
         };
         showcreateProjetModal = true;
     }
 
-    private async void CreateNewTache()
+    private void CreateNewTache()
     {
         NewTache = new TacheCreateDTO
         {
             DateDebut = DateTime.Now,
-            Priorite = (int)NiveauPriorite.Normale
+            Priorite = NiveauPriorite.Normale
         };
         showcreateTacheModal = true;
     }
@@ -459,11 +473,37 @@
     {
         if (string.IsNullOrWhiteSpace(NewTache.Nom)) return;
 
+        if (SelectedProjet != null)
+        {
+            NewTache.ProjetId = SelectedProjet.Id;
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (int.TryParse(userIdString, out int userId))
+            {
+                NewTache.EmployeAssigneId = userId;
+            }
+        }
+        try{
+
         var createdTache = await TacheService.Post(NewTache);
         Taches.Add(createdTache);
-        SelectedTache = createdTache;
+        SelectedTache = createdTache; 
         showcreateTacheModal = false;
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de la tâche : {ex.Message}");
+        }
     }
+
+    private string GetPriorityColor(NiveauPriorite p) => p.ToString();
 
     private async Task SaveNewProjet()
     {

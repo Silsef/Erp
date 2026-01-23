@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared_Erp.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,6 @@ namespace Shared_Erp.Projet
         public DateTime DateDebut { get; set; }
         public int ? EntiteRealisatriceId { get; set; }
         public int ? EntiteClienteId { get; set; }
-        public int Priorite { get; set; }
+        public NiveauPriorite Priorite { get; set; }
     }
 }

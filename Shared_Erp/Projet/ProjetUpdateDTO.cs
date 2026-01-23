@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Shared_Erp.Enums;
+using Shared_Erp.Tache;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,14 @@ namespace Shared_Erp.Projet
 {
     public class ProjetUpdateDTO
     {
+        public int Id { get; set; }
+
+        public string Nom { get; set; }
+        public string? Description { get; set; }
+        public DateTime DateDebut { get; set; }
+        public DateTime? DateFin { get; set; }
+        public string? EntiteRealisatriceNom { get; set; }
+        public string? EntiteClienteNom { get; set; }
+        public NiveauPriorite Priorite { get; set; }
     }
 }
