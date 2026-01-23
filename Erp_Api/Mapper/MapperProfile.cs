@@ -12,6 +12,7 @@ using Shared_Erp.Entite;
 using Shared_Erp.Projet;
 using Shared_Erp.Tache;
 using Shared_Erp.FeuilleTemps;
+using Shared_Erp.TypeProjet;
 
 namespace Erp_Api.Mapper
 {
@@ -60,8 +61,11 @@ namespace Erp_Api.Mapper
                 .ForMember(d=> d.EmployeResponsablePrenom, opt => opt.MapFrom(src => src.EmployeResponsable.Prenom))
                 .ForMember(d=> d.EntiteClienteNom, opt => opt.MapFrom(src => src.EntiteRealisatrice.Nom))
                 .ForMember(d=> d.EntiteClienteNom, opt => opt.MapFrom(src => src.EntiteCliente.Nom))
+                .ForMember(d=> d.TypeProjetNom, opt => opt.MapFrom(src => src.TypeProjet.Nom))
+                .ForMember(d=> d.TypeProjetId, opt => opt.MapFrom(src => src.TypeProjet.Id))
                 .ForMember(d=>d.Taches, opt => opt.Ignore())
                 .ReverseMap();
+
             CreateMap<Projet, ProjetCreateDTO>().ReverseMap();
             CreateMap<Projet, ProjetUpdateDTO>().ReverseMap();
 
@@ -79,10 +83,14 @@ namespace Erp_Api.Mapper
             CreateMap<FeuilleTemps,FeuilleTempsDTO>()
                 .ForMember(d => d.EmployeNom, opt => opt.MapFrom(src => src.Employe != null ? $"{src.Employe.Nom}" : null))
                 .ForMember(d => d.ProjetNom, opt => opt.MapFrom(src => src.Projet != null ? src.Projet.Nom : null))
-
                 .ReverseMap();
+
             CreateMap<FeuilleTempsCreateDTO,FeuilleTemps>().ReverseMap();
             CreateMap<FeuilleTempsUpdateDTO,FeuilleTemps>().ReverseMap();
+
+            CreateMap<TypeProjet,TypeProjetCreateDTO>().ReverseMap();
+            CreateMap<TypeProjet,TypeProjetUpdateDTO>().ReverseMap();
+            CreateMap<TypeProjet, TypeProjetDTO>().ReverseMap();
 
         }
     }

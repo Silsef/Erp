@@ -64,7 +64,7 @@
             if (user.Identity is not null && user.Identity.IsAuthenticated)
             {
                 Entites = await EntiteService.GetByIdEmploye(Convert.ToInt32(user.FindFirst(ClaimTypes.NameIdentifier)?.Value));
-                SelectedEntite = Entites.FirstOrDefault(e => e.Id == EntiteState.SelectedEntiteId) ?? Entites.FirstOrDefault();
+                SelectEntite(Entites.FirstOrDefault());
             }
         }
     }

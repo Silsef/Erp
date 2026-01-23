@@ -27,6 +27,7 @@ namespace Erp_Api.Models.Entity
         public DbSet<Tache> Taches { get; set; }
         public DbSet<Materiel> Materiels { get; set; }
         public DbSet<FeuilleTemps> FeuillesTemps { get; set; }
+        public DbSet<TypeProjet> TypesProjets { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -117,6 +118,12 @@ namespace Erp_Api.Models.Entity
                 .HasForeignKey(p => p.EmployeResponsableId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Projet>()
+                .HasOne(p => p.TypeProjet)
+                .WithMany(e => e.Projets)
+                .HasForeignKey(p => p.TypeProjetId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
 
             OnModelCreatingPartial(modelBuilder);
 

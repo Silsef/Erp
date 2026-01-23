@@ -11,14 +11,14 @@ namespace Erp_Blazor.Service.WebServices
 
         }
 
-        public async Task<List<ProjetDTO>> GetProjetsDemandeByEntiteId(int entiteId)
+        public async Task<List<ProjetDTO>> GetProjetsInternesByEntiteId(int entiteId)
         {
-            var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsDemandeByEntiteId/{entiteId}");
+            var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsInternesByEntiteId/{entiteId}");
             return resultat ?? new List<ProjetDTO>();
         }
-        public async Task<List<ProjetDTO>> GetProjetsRealiseByEntiteId(int entiteId)
+        public async Task<List<ProjetDTO>> GetProjetsExternesByEntiteId(int entiteId)
         {
-            var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsResaliseByEntiteId/{entiteId}");
+            var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsExternesByEntiteId/{entiteId}");
             return resultat ?? new List<ProjetDTO>();
         }
     }

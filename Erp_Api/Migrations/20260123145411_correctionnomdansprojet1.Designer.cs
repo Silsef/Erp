@@ -3,6 +3,7 @@ using System;
 using Erp_Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erp_Api.Migrations
 {
     [DbContext(typeof(ErpBdContext))]
-    partial class ErpBdContextModelSnapshot : ModelSnapshot
+    [Migration("20260123145411_correctionnomdansprojet1")]
+    partial class correctionnomdansprojet1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -460,10 +463,6 @@ namespace Erp_Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("pro_priorite");
 
-                    b.Property<int?>("TypeProjetId")
-                        .HasColumnType("integer")
-                        .HasColumnName("pro_typeprojet_id");
-
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeResponsableId");
@@ -471,8 +470,6 @@ namespace Erp_Api.Migrations
                     b.HasIndex("EntiteClienteId");
 
                     b.HasIndex("EntiteRealisatriceId");
-
-                    b.HasIndex("TypeProjetId");
 
                     b.ToTable("t_e_projet_pro", "erp");
                 });
@@ -552,25 +549,6 @@ namespace Erp_Api.Migrations
                     b.HasIndex("TacheParenteId");
 
                     b.ToTable("t_e_tache_tac", "erp");
-                });
-
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.TypeProjet", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("tpo_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Nom")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("tpo_nom");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("t_e_typeprojet_tpo", "erp");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Jointures.A_Pour_Role", b =>
@@ -728,18 +706,11 @@ namespace Erp_Api.Migrations
                         .HasForeignKey("EntiteRealisatriceId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Erp_Api.Models.Entity.Tables.Entitees.TypeProjet", "TypeProjet")
-                        .WithMany("Projets")
-                        .HasForeignKey("TypeProjetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("EmployeResponsable");
 
                     b.Navigation("EntiteCliente");
 
                     b.Navigation("EntiteRealisatrice");
-
-                    b.Navigation("TypeProjet");
                 });
 
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
@@ -851,11 +822,6 @@ namespace Erp_Api.Migrations
             modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.Tache", b =>
                 {
                     b.Navigation("SousTaches");
-                });
-
-            modelBuilder.Entity("Erp_Api.Models.Entity.Tables.Entitees.TypeProjet", b =>
-                {
-                    b.Navigation("Projets");
                 });
 #pragma warning restore 612, 618
         }

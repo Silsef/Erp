@@ -1,5 +1,6 @@
 ﻿using Shared_Erp.Enums;
 using Shared_Erp.Tache;
+using Shared_Erp.TypeProjet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,5 +20,6 @@ namespace Shared_Erp.Projet
         public string? EntiteRealisatriceNom { get; set; }
         public string? EntiteClienteNom { get; set; }
         public NiveauPriorite Priorite { get; set; }
+        public int? TypeProjetId { get; set; }
     }
 }

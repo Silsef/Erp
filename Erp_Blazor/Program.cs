@@ -51,6 +51,7 @@ builder.Services.AddScoped<ICandidatureService, CandidatureWebService>();
 builder.Services.AddScoped<IEntretienService, EntretienWebService>();
 builder.Services.AddScoped<IFeuilleTempsService, FeuilleTempsWebService>();
 builder.Services.AddScoped<ITacheService, TacheWebService>();
+builder.Services.AddScoped<ITypeProjetService, TypeProjetWebService>();
 
 
 builder.Services.AddScoped<EntiteState>();

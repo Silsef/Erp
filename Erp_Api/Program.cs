@@ -61,6 +61,7 @@ builder.Services.AddScoped<EntiteManager>();
 builder.Services.AddScoped<TacheManager>();
 builder.Services.AddScoped<FeuilleTempsManager>();
 builder.Services.AddScoped<TacheManager>();
+builder.Services.AddScoped<TypeProjetManager>();
 
 // Configuration JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("App:Jwt");

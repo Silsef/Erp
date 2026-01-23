@@ -7,6 +7,7 @@
 @using Shared_Erp.FeuilleTemps
 @using System.Globalization
 @inject IProjetService ProjetService
+@inject ITypeProjetService TypeProjetService
 @inject IEntiteService EntiteService
 @inject IFeuilleTempsService FeuilleTempsService
 @inject IEmployeService EmployeService
@@ -14,6 +15,7 @@
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
+@using Shared_Erp.TypeProjet
 @inject AuthenticationStateProvider AuthStateProvider
 @implements IDisposable
 @inject EntiteState EntiteState
@@ -25,23 +27,23 @@
     <div class="project-list-sidebar">
         <h5 class="text-center mb-3">Mes Projets</h5>
 
-        @if (Projetsdemandes == null && Projetsrelises == null)
+        @if (Projetsexternes == null && Projetsinternes == null)
         {
             <p class="text-center">Chargement...</p>
         }
         else
         {
 
-            <p>Projets que l'entreprise réalise</p>
-            @foreach (var projet in Projetsrelises)
+            <p>Projets internes</p>
+            @foreach (var projet in Projetsinternes)
             {
                 <div class="@GetClassForProjet(projet)" @onclick="() => SelectProjet(projet)">
                     @projet.Nom
                 </div>
             }
 
-            <p>Projets où l'entreprise </p>
-            @foreach (var projet in Projetsdemandes)
+            <p>Projets externes</p>
+            @foreach (var projet in Projetsexternes)
             {
                 <div class="@GetClassForProjet(projet)" @onclick="() => SelectProjet(projet)">
                     @projet.Nom
@@ -99,6 +101,8 @@
                     <div class="animate fade-in">
                         <h4>Informations Générales</h4>
                         <p><strong>Description :</strong> @SelectedProjet.Description</p>
+                        <p><strong>Description :</strong> @SelectedProjet.TypeProjetNom</p>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <p><strong>Début :</strong> @SelectedProjet.DateDebut.ToShortDateString()</p>
@@ -391,6 +395,17 @@
                             </select>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label">Type de Projet</label>
+                            <select class="form-select" @bind="NewProjet.TypeProjetId">
+                                <option value="">-- Sélectionner un type de projet --</option>
+                                @foreach (var typ in TypesProjet)
+                                {
+                                    <option value="@typ.Id">@typ.Nom</option>
+                                }
+                            </select>
+                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -465,10 +480,11 @@
 
 @code {
     // Projets
-    private List<ProjetDTO> Projetsdemandes = new List<ProjetDTO>();
-    private List<ProjetDTO> Projetsrelises = new List<ProjetDTO>();
+    private List<ProjetDTO> Projetsinternes = new List<ProjetDTO>();
+    private List<ProjetDTO> Projetsexternes= new List<ProjetDTO>();
     private List<EntiteDTO> Entites = new List<EntiteDTO>();
     private List<TacheDTO> Taches = new List<TacheDTO>();
+    private List<TypeProjetDTO> TypesProjet = new List<TypeProjetDTO>();
     private ProjetDTO? SelectedProjet;
     private TacheDTO? SelectedTache;
     private bool showcreateProjetModal = false;
@@ -498,9 +514,8 @@
     protected override async Task OnInitializedAsync()
     {
         EntiteState.OnChange += HandleEntiteChanged;
-        GetProjets(EntiteState.SelectedEntiteId);
+        await GetProjets();
         Entites = await EntiteService.GetAll();
-
         NewProjet.DateDebut = DateTime.Now;
         NewProjet.Priorite = NiveauPriorite.Normale;
 
@@ -509,20 +524,27 @@
         Annee = now.Year;
     }
 
-    private async void GetProjets(int id)
+    private async Task GetProjets()
     {
-        Projetsrelises = await ProjetService.GetProjetsRealiseByEntiteId(id);
-        Projetsdemandes = await ProjetService.GetProjetsDemandeByEntiteId(id);
-
+        int? id = EntiteState.SelectedEntiteId;
+        if (id.HasValue) 
+        {
+            Projetsinternes = await ProjetService.GetProjetsInternesByEntiteId(id.Value);
+            Projetsexternes = await ProjetService.GetProjetsExternesByEntiteId(id.Value);
+        }
+        else
+        {
+            Projetsinternes = new List<ProjetDTO>();
+            Projetsexternes = new List<ProjetDTO>();
+        }
 
         StateHasChanged();
-
     }
     private async void HandleEntiteChanged()
     {
         await InvokeAsync(async () =>
         {
-            GetProjets(EntiteState.SelectedEntiteId);
+            await GetProjets();
             StateHasChanged();
         });
     }
@@ -538,13 +560,19 @@
         SelectedTache = tache;
     }
 
-    private void CreateNewProjet()
+    private async Task CreateNewProjet()
     {
         NewProjet = new ProjetCreateDTO
         {
             DateDebut = DateTime.Now,
             Priorite = NiveauPriorite.Normale
         };
+
+        if(TypesProjet.Count == 0)
+        {
+            TypesProjet = await TypeProjetService.GetAll();
+        }
+
         showcreateProjetModal = true;
     }
 
@@ -601,13 +629,9 @@
         if (string.IsNullOrWhiteSpace(NewProjet.Nom)) return;
 
         var createdProjet = await ProjetService.Post(NewProjet);
-        if(NewProjet.EntiteRealisatriceId == EntiteState.SelectedEntiteId)
-        {
-            Projetsrelises.Add(createdProjet);
-        } else {
-            Projetsdemandes.Add(createdProjet);
-        }
-        
+
+        GetProjets();
+
         SelectedProjet = createdProjet;
 
         showcreateProjetModal = false;

@@ -37,17 +37,17 @@ namespace Erp_Api.Controllers
         }
 
         [HttpGet("{entiteId}")]
-        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsDemandeByEntiteId(int entiteId)
+        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsInternesByEntiteId(int entiteId)
         {
-            var projets = await projetmanager.GetProjetsDemandeByEntiteId(entiteId);
+            var projets = await projetmanager.GetProjetsInternesByEntiteId(entiteId);
 
             return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
         }
 
         [HttpGet("{entiteId}")]
-        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsResaliseByEntiteId(int entiteId)
+        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsExternesByEntiteId(int entiteId)
         {
-            var projets = await projetmanager.GetProjetsRealiseByEntiteId(entiteId);
+            var projets = await projetmanager.GetProjetsExternesByEntiteId(entiteId);
 
             return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
         }

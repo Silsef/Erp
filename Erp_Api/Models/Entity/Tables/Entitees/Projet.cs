@@ -24,20 +24,37 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("pro_date_fin")]
         public DateTime? DateFin { get; set; }
 
-        [Column("pro_entite_id")]
+
+        [Column("pro_typeprojet_id")]
+        public int? TypeProjetId { get; set; }
+
+        [ForeignKey(nameof(TypeProjetId))]
+        public TypeProjet? TypeProjet { get; set; }
+
+
+
+        [Column("pro_entiterealisatrice_id")]
         public int? EntiteRealisatriceId { get; set; }
+
+        [ForeignKey(nameof(EntiteRealisatriceId))]
         public Entite? EntiteRealisatrice { get; set; }
 
-        [ForeignKey("pro_entiteclient_id")]
+
+        [Column("pro_entitecliente_id")]
         public int? EntiteClienteId { get; set; }
+
+        [ForeignKey(nameof(EntiteClienteId))] 
         public Entite? EntiteCliente { get; set; }
 
-        [ForeignKey("pro_priorite")]
+        [Column("pro_priorite")] 
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
+
         public ICollection<Tache> Taches { get; set; } = new List<Tache>();
 
-        [ForeignKey("pro_employeresponsable_id")]
+        [Column("pro_employeresponsable_id")]
         public int? EmployeResponsableId { get; set; }
+
+        [ForeignKey(nameof(EmployeResponsableId))]
         public Employe? EmployeResponsable { get; set; }
     }
 }

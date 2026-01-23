@@ -21,24 +21,26 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 .Include(p => p.EntiteRealisatrice)
                 .Include(p => p.EntiteCliente)
                 .Include(p => p.EmployeResponsable)
+               .Include(d => d.TypeProjet)
                 .Include(p => p.Taches)
                 .ThenInclude(d=>d.EmployeAssigne)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Projet>> GetProjetsDemandeByEntiteId(int entiteId)
+        public async Task<IEnumerable<Projet>> GetProjetsInternesByEntiteId(int entiteId)
         {
             return await dbSet
                .Include(p => p.EntiteRealisatrice)
                .Include(p => p.EntiteCliente)
                .Include(p => p.EmployeResponsable)
+               .Include(d => d.TypeProjet)
                .Include(p => p.Taches)
                .ThenInclude(d => d.EmployeAssigne)
-               .Where(d=> d.EntiteClienteId == entiteId)
+               .Where(d=> d.EntiteClienteId == entiteId && d.EntiteRealisatriceId == entiteId)
                .ToListAsync();
         }
 
-        public async Task<IEnumerable<Projet>> GetProjetsRealiseByEntiteId(int entiteId)
+        public async Task<IEnumerable<Projet>> GetProjetsExternesByEntiteId(int entiteId)
         {
             return await dbSet
                .Include(p => p.EntiteRealisatrice)
@@ -46,7 +48,8 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                .Include(p => p.EmployeResponsable)
                .Include(p => p.Taches)
                .ThenInclude(d => d.EmployeAssigne)
-               .Where(d => d.EntiteRealisatriceId == entiteId)
+               .Include(d=> d.TypeProjet)
+               .Where(d => d.EntiteRealisatriceId == entiteId && d.EntiteClienteId !=entiteId)
                .ToListAsync();
         }
     }
