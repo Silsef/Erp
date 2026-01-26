@@ -65,44 +65,54 @@ namespace Erp_Blazor.Service.Security
 
             if (keyValuePairs != null)
             {
-                // Extraire les claims standards
                 foreach (var kvp in keyValuePairs)
                 {
                     if (kvp.Value != null)
                     {
-                        // Gérer les différents types de valeurs
-                        var value = kvp.Value.ToString();
-
-                        // Mapper les claims JWT vers les claims .NET
-                        switch (kvp.Key.ToLower())
+                        if (kvp.Value is JsonElement element && element.ValueKind == JsonValueKind.Array)
                         {
-                            case "email":
-                            case "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress":
-                                claims.Add(new Claim(ClaimTypes.Email, value));
-                                claims.Add(new Claim(ClaimTypes.Name, value)); // Pour affichage dans le layout
-                                break;
-                            case "nom":
-                                claims.Add(new Claim("nom", value));
-                                break;
-                            case "prenom":
-                                claims.Add(new Claim("prenom", value));
-                                break;
-                            case "id":
-                                claims.Add(new Claim(ClaimTypes.NameIdentifier, value));
-                                break;
-                            case "role":
-                            case "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
-                                claims.Add(new Claim(ClaimTypes.Role, value));
-                                break;
-                            default:
-                                claims.Add(new Claim(kvp.Key, value));
-                                break;
+                            foreach (var item in element.EnumerateArray())
+                            {
+                                AddClaim(claims, kvp.Key, item.ToString());
+                            }
+                        }
+                        else
+                        {
+                            AddClaim(claims, kvp.Key, kvp.Value.ToString());
                         }
                     }
                 }
             }
 
             return claims;
+        }
+
+        private static void AddClaim(List<Claim> claims, string key, string value)
+        {
+            switch (key.ToLower())
+            {
+                case "email":
+                case "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress":
+                    claims.Add(new Claim(ClaimTypes.Email, value));
+                    claims.Add(new Claim(ClaimTypes.Name, value));
+                    break;
+                case "nom":
+                    claims.Add(new Claim("nom", value));
+                    break;
+                case "prenom":
+                    claims.Add(new Claim("prenom", value));
+                    break;
+                case "id":
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, value));
+                    break;
+                case "role":
+                case "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
+                    claims.Add(new Claim(ClaimTypes.Role, value));
+                    break;
+                default:
+                    claims.Add(new Claim(key, value));
+                    break;
+            }
         }
 
         private static byte[] ParseBase64WithoutPadding(string base64)

@@ -14,6 +14,8 @@ namespace Shared_Erp.FeuilleTemps
         public int EmployeId { get; set; }
         public string EmployeNom { get; set; } = null!;
         public int? ProjetId { get; set; }
+        public int? TacheId { get; set; }
+
         public string? ProjetNom { get; set; }
         public string? Commentaire { get; set; }
 
@@ -24,12 +26,17 @@ namespace Shared_Erp.FeuilleTemps
         public DateTime Date { get; set; }
         public bool EstMatin { get; set; }
         public int? ProjetId { get; set; }
+        public int? TacheId { get; set; }
+
         public string? Commentaire { get; set; }
     }
     public class FeuilleTempsUpdateDTO
     {
         public int Id { get; set; }
         public string? Commentaire { get; set; }
+        public int? TacheId { get; set; }
+        public int? ProjetId { get; set; }
+
 
     }
 }

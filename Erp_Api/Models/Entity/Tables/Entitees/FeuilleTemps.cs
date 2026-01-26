@@ -24,6 +24,10 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public int? ProjetId { get; set; }
         public Projet? Projet { get; set; }
 
+        [Column("ft_tache_id")]
+        public int? TacheId { get; set; }
+        public Tache? Tache { get; set; }
+
         [Column("ft_commentaire")]
         public string? Commentaire { get; set; }
     }

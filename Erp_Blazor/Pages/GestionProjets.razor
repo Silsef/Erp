@@ -308,6 +308,18 @@
                                                    value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
                                         </div>
                                         <div class="mb-3">
+                                            <label class="form-label">Sur quelle tache avez vous travaillé ?</label>
+                                            <div class="d-flex gap-2">
+                                                <InputSelect class="form-select" @bind-Value="idtache">
+                                                    <option value="">-- Sélectionner une tache --</option>
+                                                    @foreach (var ta in Taches)
+                                                    {
+                                                        <option value="@ta.Id">@ta.Nom</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
                                             <label class="form-label"><strong>Qu'avez-vous fait ?</strong></label>
                                             <textarea class="form-control" rows="5" @bind="ModalCommentaire"
                                                       placeholder="Décrivez ce que vous avez réalisé pendant cette demi-journée..."></textarea>
@@ -673,6 +685,7 @@
     private FeuilleTempsDTO? EditingFeuille;
     private DateTime ModalDate;
     private bool ModalEstMatin;
+    private int idtache;
     private string? ModalCommentaire;
 
     public bool ShowModalCreateEntite = false;
@@ -873,7 +886,6 @@
 
             if (IsChefDeProjet)
             {
-                // Chef de projet : afficher le premier employé de la liste
                 if (EmployesDuProjet.Any())
                 {
                     SelectedEmployeId = EmployesDuProjet.First().Id;
@@ -961,7 +973,7 @@
             f.Date.Date == date.Date && f.EstMatin == estMatin);
 
         // Déterminer si la cellule est éditable
-        bool isEditable = !IsChefDeProjet && SelectedEmployeId == EmployeConnecteId;
+        bool isEditable = SelectedEmployeId == EmployeConnecteId;
         var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
 
         if (!isEditable)
@@ -1028,8 +1040,7 @@
 
     private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
     {
-        // Seuls les employés peuvent modifier leurs propres feuilles
-        if (IsChefDeProjet || SelectedEmployeId != EmployeConnecteId)
+        if (SelectedEmployeId != EmployeConnecteId)
             return;
 
         EditingFeuille = feuille;
@@ -1037,6 +1048,7 @@
         ModalEstMatin = estMatin;
         ModalCommentaire = feuille?.Commentaire;
         ShowModal = true;
+
     }
 
     private void CloseModal()
@@ -1058,7 +1070,9 @@
                 var updateDto = new FeuilleTempsUpdateDTO
                 {
                     Id = EditingFeuille.Id,
-                    Commentaire = ModalCommentaire
+                    Commentaire = ModalCommentaire,
+                    TacheId = idtache,
+                    ProjetId = SelectedProjet.Id
                 };
                 await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
             }
@@ -1070,7 +1084,8 @@
                     Date = ModalDate,
                     EstMatin = ModalEstMatin,
                     ProjetId = SelectedProjet?.Id,
-                    Commentaire = ModalCommentaire
+                    Commentaire = ModalCommentaire,
+                    TacheId = idtache,
                 };
                 await FeuilleTempsService.Post(createDto);
             }
