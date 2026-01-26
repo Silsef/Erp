@@ -23,7 +23,7 @@ namespace Shared_Erp.Entite
         public string? Telephone { get; set; }
         public bool EstEntreprise { get; set; } = true;
         public string? Siret {  get; set; }
-        public AdresseCreateDTO Adresse { get; set; } = null!;
+        public AdresseCreateDTO? Adresse { get; set; } = null!;
 
     }
 

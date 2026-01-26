@@ -344,6 +344,49 @@
         border-color: #adb5bd;
         color: #495057;
     }
+
+.modal-content-modern {
+    border-radius: 16px; /* Coins plus arrondis */
+    border: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.modal-header-modern {
+    background-color: #f8f9fa; /* Fond gris très léger */
+    border-bottom: 1px solid #eaeaea;
+    padding: 1.5rem;
+}
+
+.modal-body-modern {
+    padding: 2rem;
+}
+
+.section-box {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.section-title {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* Animation d'apparition */
+.modal.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+    transition: all 0.3s ease-out;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .calendar-grid {

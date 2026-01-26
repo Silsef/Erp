@@ -15,8 +15,9 @@ namespace Shared_Erp.Projet
         [Required(ErrorMessage = "La date de début est obligatoire")]
         public DateTime DateDebut { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "L'entité réalisatrice doit être sélectionnée")]
         public int? EntiteRealisatriceId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "L'entité cliente doit être sélectionnée")]
         public int? EntiteClienteId { get; set; }
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
         public int? TypeProjetId { get; set; }

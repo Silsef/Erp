@@ -3,9 +3,11 @@
 @using Shared_Erp.Entite
 @using Shared_Erp.Enums
 @using Shared_Erp.Tache
+@using Shared_Erp.Adresse
 @using Shared_Erp.Employe
 @using Shared_Erp.FeuilleTemps
 @using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
 @inject IProjetService ProjetService
 @inject ITypeProjetService TypeProjetService
 @inject IEntiteService EntiteService
@@ -22,6 +24,14 @@
 
 <h3>Gestion des Projets</h3>
 
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @ErrorMessage
+        <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+    </div>
+}
+
 <div class="layout-container">
 
     <div class="project-list-sidebar">
@@ -33,8 +43,7 @@
         }
         else
         {
-
-            <p>Projets internes</p>
+            <p class="fw-bold text-muted small mt-2">Projets internes</p>
             @foreach (var projet in Projetsinternes)
             {
                 <div class="@GetClassForProjet(projet)" @onclick="() => SelectProjet(projet)">
@@ -42,14 +51,13 @@
                 </div>
             }
 
-            <p>Projets externes</p>
+            <p class="fw-bold text-muted small mt-2">Projets externes</p>
             @foreach (var projet in Projetsexternes)
             {
                 <div class="@GetClassForProjet(projet)" @onclick="() => SelectProjet(projet)">
                     @projet.Nom
                 </div>
             }
-
         }
 
         <button class="btn btn-sm btn-outline-light mt-3 w-100" @onclick="CreateNewProjet">
@@ -101,7 +109,7 @@
                     <div class="animate fade-in">
                         <h4>Informations Générales</h4>
                         <p><strong>Description :</strong> @SelectedProjet.Description</p>
-                        <p><strong>Description :</strong> @SelectedProjet.TypeProjetNom</p>
+                        <p><strong>Type :</strong> @SelectedProjet.TypeProjetNom</p>
 
                         <div class="row">
                             <div class="col-md-6">
@@ -160,7 +168,7 @@
                                             <div class="mb-2">
                                                 <i class="bi bi-flag me-2 text-primary"></i>
                                                 <strong>Statut :</strong>
-                                                <span class="d-block ms-4">@SelectedTache.Statut.ToString().Replace(",","")</span>
+                                                <span class="d-block ms-4">@SelectedTache.Statut.ToString().Replace(",", "")</span>
                                             </div>
                                         </div>
                                     </div>
@@ -194,7 +202,7 @@
                                         {
                                             <div class="task-meta-item bulle-priority-@GetPriorityColor(tache.Priorite)">
                                                 <i class="bi bi-info-circle "></i>
-                                                <span class="">@tache.Statut.ToString().Replace("_","")</span>
+                                                <span class="">@tache.Statut.ToString().Replace("_", "")</span>
                                             </div>
                                         }
                                     </div>
@@ -226,14 +234,12 @@
                                     </select>
                                 </div>
 
-                                <!-- Sélection de la semaine -->
                                 <div class="control-group">
                                     <label>Semaine :</label>
                                     <input type="number" class="form-control" min="1" max="53"
                                            @bind="NumSemaine" @bind:after="LoadCalendrierData" />
                                 </div>
 
-                                <!-- Sélection de l'année -->
                                 <div class="control-group">
                                     <label>Année :</label>
                                     <input type="number" class="form-control"
@@ -245,7 +251,6 @@
                                 </button>
                             </div>
 
-                            <!-- Affichage de la période -->
                             <div class="periode-display">
                                 Du @StartOfWeek.ToString("dd/MM/yyyy") au @EndOfWeek.ToString("dd/MM/yyyy")
                             </div>
@@ -260,7 +265,6 @@
                         else
                         {
                             <div class="calendar-grid">
-                                <!-- En-têtes des jours -->
                                 <div class="calendar-header-cell corner-cell"></div>
                                 @foreach (var jour in JoursSemaine)
                                 {
@@ -270,14 +274,12 @@
                                     </div>
                                 }
 
-                                <!-- Ligne Matin -->
                                 <div class="calendar-row-header">Matin</div>
                                 @foreach (var jour in JoursSemaine)
                                 {
                                     @RenderCell(jour.Date, true)
                                 }
 
-                                <!-- Ligne Après-midi -->
                                 <div class="calendar-row-header">Après-midi</div>
                                 @foreach (var jour in JoursSemaine)
                                 {
@@ -287,7 +289,6 @@
                         }
                     </div>
 
-                    <!-- Modal pour créer/éditer une feuille de temps -->
                     @if (ShowModal)
                     {
                         <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -311,14 +312,11 @@
                                                    value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
                                         </div>
 
-                                       
+                                        <div class="mb-3">
+                                            <label class="form-label">Commentaire</label>
+                                            <textarea class="form-control" rows="3" @bind="ModalCommentaire"></textarea>
+                                        </div>
 
-                                        
-                                            <div class="mb-3">
-                                                <label class="form-label">Commentaire</label>
-                                                <textarea class="form-control" rows="3" @bind="ModalCommentaire"></textarea>
-                                            </div>
-                                        
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
@@ -331,148 +329,259 @@
                 }
             </div>
         }
-   
     </div>
 </div>
 
-@* --- MODAL DE CRÉATION DE PROJET --- *@
+@* --- MODAL DE CRÉATION DE PROJET AVEC VALIDATION --- *@
 @if (showcreateProjetModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Créer un nouveau projet</h5>
-                    <button type="button" class="btn-close" @onclick="() => showcreateProjetModal = false"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
+                <EditForm Model="@NewProjet" OnValidSubmit="SaveNewProjet">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Créer un nouveau projet</h5>
+                        <button type="button" class="btn-close" @onclick="() => showcreateProjetModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+
                         <div class="mb-3">
-                            <label class="form-label">Nom du projet</label>
-                            <input class="form-control" @bind="NewProjet.Nom" placeholder="Ex: Refonte Site Web" />
+                            <label class="form-label">Nom du projet *</label>
+                            <InputText class="form-control" @bind-Value="NewProjet.Nom" placeholder="Ex: Refonte Site Web" />
+                            <ValidationMessage For="@(() => NewProjet.Nom)" />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control" rows="3" @bind="NewProjet.Description" placeholder="Détails du projet..."></textarea>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="NewProjet.Description" placeholder="Détails du projet..." />
+                            <ValidationMessage For="@(() => NewProjet.Description)" />
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Date de début</label>
-                                <input type="date" class="form-control" @bind="NewProjet.DateDebut" />
+                                <label class="form-label">Date de début *</label>
+                                <InputDate class="form-control" @bind-Value="NewProjet.DateDebut" />
+                                <ValidationMessage For="@(() => NewProjet.DateDebut)" />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Priorité</label>
-                                <select class="form-select" @bind="NewProjet.Priorite">
+                                <InputSelect class="form-select" @bind-Value="NewProjet.Priorite">
                                     @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
                                     {
                                         <option value="@niveau">@niveau</option>
                                     }
-                                </select>
+                                </InputSelect>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Entité Réalisatrice</label>
-                            <select class="form-select" @bind="NewProjet.EntiteRealisatriceId">
-                                <option value="">-- Sélectionner une entité --</option>
-                                @foreach (var ent in Entites)
-                                {
-                                    <option value="@ent.Id">@ent.Nom</option>
-                                }
-                            </select>
-                        </div>
+                            <div>
 
-                        <div class="mb-3">
                             <label class="form-label">Entité Cliente</label>
-                            <select class="form-select" @bind="NewProjet.EntiteClienteId">
+                            <InputSelect class="form-select" @bind-Value="NewProjet.EntiteClienteId">
                                 <option value="">-- Sélectionner une entité --</option>
                                 @foreach (var ent in Entites)
                                 {
                                     <option value="@ent.Id">@ent.Nom</option>
                                 }
-                            </select>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => NewProjet.EntiteRealisatriceId)" />
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary" @onclick="OpenModalEntite">+</button>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Type de Projet</label>
-                            <select class="form-select" @bind="NewProjet.TypeProjetId">
+                            <InputSelect class="form-select" @bind-Value="NewProjet.TypeProjetId">
                                 <option value="">-- Sélectionner un type de projet --</option>
                                 @foreach (var typ in TypesProjet)
                                 {
                                     <option value="@typ.Id">@typ.Nom</option>
                                 }
-                            </select>
+                            </InputSelect>
                         </div>
-
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
-                    <button type="button" class="btn btn-primary" @onclick="SaveNewProjet">Créer Projet</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Créer Projet</button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     </div>
 }
 
-@* --- MODAL DE CRÉATION DE TACHE --- *@
+@* --- MODAL DE CRÉATION DE TACHE AVEC VALIDATION --- *@
 @if (showcreateTacheModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Créer une nouvelle Tache</h5>
-                    <button type="button" class="btn-close" @onclick="() => showcreateTacheModal = false"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
+                <EditForm Model="@NewTache" OnValidSubmit="SaveNewTache">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Créer une nouvelle Tache</h5>
+                        <button type="button" class="btn-close" @onclick="() => showcreateTacheModal = false"></button>
+                    </div>
+                    <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Nom de la tache</label>
-                            <input class="form-control" @bind="NewTache.Nom" placeholder="Changement outillage PAOMI" />
+                            <label class="form-label">Nom de la tache *</label>
+                            <InputText class="form-control" @bind-Value="NewTache.Nom" placeholder="Changement outillage PAOMI" />
+                            <ValidationMessage For="@(() => NewTache.Nom)" />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control" rows="3" @bind="NewTache.Description" placeholder="Détails de la tache..."></textarea>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="NewTache.Description" placeholder="Détails de la tache..." />
+                            <ValidationMessage For="@(() => NewTache.Description)" />
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Date de début</label>
-                                <input type="date" class="form-control" @bind="NewTache.DateDebut" />
+                                <label class="form-label">Date de début *</label>
+                                <InputDate class="form-control" @bind-Value="NewTache.DateDebut" />
+                                <ValidationMessage For="@(() => NewTache.DateDebut)" />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Priorité</label>
-                                <select class="form-select" @bind="NewTache.Priorite">
+                                <InputSelect class="form-select" @bind-Value="NewTache.Priorite">
                                     @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
                                     {
                                         <option value="@niveau">@niveau</option>
                                     }
-                                </select>
+                                </InputSelect>
                             </div>
                         </div>
-                        
 
                         <div class="mb-3">
                             <label class="form-label">Tache Parente</label>
-                            <select class="form-select" @bind="NewTache.TacheParenteId">
+                            <InputSelect class="form-select" @bind-Value="NewTache.TacheParenteId">
                                 <option value="">-- Sélectionner une Tache --</option>
                                 @foreach (var tac in Taches)
                                 {
                                     <option value="@tac.Id">@tac.Nom</option>
                                 }
-                            </select>
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showcreateTacheModal = false">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Créer Tache</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ShowModalCreateEntite)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-content-modern">
+                <EditForm Model="@NewEntite" OnValidSubmit="SaveNewEntite">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-header modal-header-modern">
+                        <div>
+                            <h5 class="modal-title fw-bold text-primary">
+                                <i class="bi bi-building-add me-2"></i>Nouvelle Entité
+                            </h5>
+                            <small class="text-muted">Ajoutez un partenaire ou une entreprise cliente</small>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="CloseModalEntite"></button>
+                    </div>
+
+                    <div class="modal-body modal-body-modern">
+
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <div class="form-floating">
+                                    <InputText id="nomEntite" class="form-control" @bind-Value="NewEntite.Nom" placeholder="Nom" />
+                                    <label for="nomEntite">Nom de l'entité *</label>
+                                </div>
+                                <ValidationMessage For="@(() => NewEntite.Nom)" class="text-danger small ms-1" />
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="form-floating">
+                                    <InputText id="telEntite" class="form-control" @bind-Value="NewEntite.Telephone" placeholder="Tel" />
+                                    <label for="telEntite">Téléphone</label>
+                                </div>
+                                <ValidationMessage For="@(() => NewEntite.Telephone)" class="text-danger small ms-1" />
+                            </div>
                         </div>
 
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showcreateTacheModal = false">Annuler</button>
-                    <button type="button" class="btn btn-primary" @onclick="SaveNewTache">Créer Tache</button>
-                </div>
+                        <div class="section-box mt-4">
+                            <span class="section-title"><i class="bi bi-info-circle me-2"></i>Type Juridique</span>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="@(!NewEntite.EstEntreprise ? "fw-bold text-dark" : "text-muted") me-3">Consortium</span>
+                                <div class="form-check form-switch fs-4 m-0">
+                                    <InputCheckbox class="form-check-input" role="switch" @bind-Value="NewEntite.EstEntreprise" />
+                                </div>
+                                <span class="@(NewEntite.EstEntreprise ? "fw-bold text-primary" : "text-muted") ms-3">Entreprise</span>
+                            </div>
+
+                            @if (NewEntite.EstEntreprise)
+                            {
+                                <div class="animate fade-in mt-3">
+                                    <div class="form-floating">
+                                        <InputText id="siretEntite" class="form-control" @bind-Value="NewEntite.Siret" placeholder="SIRET" />
+                                        <label for="siretEntite">Numéro de SIRET</label>
+                                    </div>
+                                    <ValidationMessage For="@(() => NewEntite.Siret)" class="text-danger small ms-1" />
+                                </div>
+
+                                <div class="section-box">
+                                    <span class="section-title"><i class="bi bi-geo-alt me-2"></i>Localisation</span>
+
+                                    <div class="form-floating mb-3">
+                                        <InputText id="rueEntite" class="form-control" @bind-Value="NewEntite.Adresse.Rue" placeholder="Rue" />
+                                        <label for="rueEntite">Rue / Voie</label>
+                                        <ValidationMessage For="@(() => NewEntite.Adresse.Rue)" class="text-danger small ms-1" />
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-5">
+                                            <div class="form-floating">
+                                                <InputText id="cpEntite" class="form-control" @bind-Value="NewEntite.Adresse.CodePostal" placeholder="CP" />
+                                                <label for="cpEntite">Code Postal</label>
+                                            </div>
+                                            <ValidationMessage For="@(() => NewEntite.Adresse.CodePostal)" class="text-danger small ms-1" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="form-floating">
+                                                <InputText id="villeEntite" class="form-control" @bind-Value="NewEntite.Adresse.Ville" placeholder="Ville" />
+                                                <label for="villeEntite">Ville</label>
+                                            </div>
+                                            <ValidationMessage For="@(() => NewEntite.Adresse.Ville)" class="text-danger small ms-1" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-floating mt-3">
+                                        <InputText id="paysEntite" class="form-control" @bind-Value="NewEntite.Adresse.Pays" placeholder="Pays" />
+                                        <label for="paysEntite">Pays</label>
+                                        <ValidationMessage For="@(() => NewEntite.Adresse.Pays)" class="text-danger small ms-1" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        
+
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0 pb-4 pe-4">
+                        <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" @onclick="CloseModalEntite">Annuler</button>
+                        <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i> Créer l'entité
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     </div>
@@ -481,7 +590,7 @@
 @code {
     // Projets
     private List<ProjetDTO> Projetsinternes = new List<ProjetDTO>();
-    private List<ProjetDTO> Projetsexternes= new List<ProjetDTO>();
+    private List<ProjetDTO> Projetsexternes = new List<ProjetDTO>();
     private List<EntiteDTO> Entites = new List<EntiteDTO>();
     private List<TacheDTO> Taches = new List<TacheDTO>();
     private List<TypeProjetDTO> TypesProjet = new List<TypeProjetDTO>();
@@ -492,6 +601,7 @@
     private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
     private TacheCreateDTO NewTache = new TacheCreateDTO();
     private string ActiveTab = "overview";
+    private string? ErrorMessage;
 
     // Calendrier
     private List<FeuilleTempsDTO> FeuillesTemps = new();
@@ -504,12 +614,15 @@
     private DateTime EndOfWeek;
     private List<JourSemaine> JoursSemaine = new();
 
-    // Modal
+    // Modal Feuille Temps
     private bool ShowModal = false;
     private FeuilleTempsDTO? EditingFeuille;
     private DateTime ModalDate;
     private bool ModalEstMatin;
     private string? ModalCommentaire;
+
+    public bool ShowModalCreateEntite = false;
+    public EntiteCreateDTO? NewEntite = new EntiteCreateDTO();
 
     protected override async Task OnInitializedAsync()
     {
@@ -526,20 +639,28 @@
 
     private async Task GetProjets()
     {
-        int? id = EntiteState.SelectedEntiteId;
-        if (id.HasValue) 
+        ErrorMessage = null;
+        try
         {
-            Projetsinternes = await ProjetService.GetProjetsInternesByEntiteId(id.Value);
-            Projetsexternes = await ProjetService.GetProjetsExternesByEntiteId(id.Value);
+            int? id = EntiteState.SelectedEntiteId;
+            if (id.HasValue)
+            {
+                Projetsinternes = await ProjetService.GetProjetsInternesByEntiteId(id.Value);
+                Projetsexternes = await ProjetService.GetProjetsExternesByEntiteId(id.Value);
+            }
+            else
+            {
+                Projetsinternes = new List<ProjetDTO>();
+                Projetsexternes = new List<ProjetDTO>();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Projetsinternes = new List<ProjetDTO>();
-            Projetsexternes = new List<ProjetDTO>();
+            ErrorMessage = $"Impossible de charger les projets : {ex.Message}";
         }
-
         StateHasChanged();
     }
+
     private async void HandleEntiteChanged()
     {
         await InvokeAsync(async () =>
@@ -548,11 +669,19 @@
             StateHasChanged();
         });
     }
+
     private async void SelectProjet(ProjetDTO projet)
     {
         SelectedProjet = projet;
         ActiveTab = "overview";
-        Taches = await TacheService.GetTachesByProjetId(projet.Id);
+        try
+        {
+            Taches = await TacheService.GetTachesByProjetId(projet.Id);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors du chargement des tâches : {ex.Message}";
+        }
     }
 
     private void SelectTache(TacheDTO tache)
@@ -562,22 +691,30 @@
 
     private async Task CreateNewProjet()
     {
+        ErrorMessage = null;
         NewProjet = new ProjetCreateDTO
         {
             DateDebut = DateTime.Now,
-            Priorite = NiveauPriorite.Normale
+            Priorite = NiveauPriorite.Normale,
+            EntiteRealisatriceId = EntiteState.SelectedEntiteId
         };
-
-        if(TypesProjet.Count == 0)
+        if (TypesProjet.Count == 0)
         {
-            TypesProjet = await TypeProjetService.GetAll();
+            try
+            {
+                TypesProjet = await TypeProjetService.GetAll();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erreur chargement types de projet : {ex.Message}";
+            }
         }
-
         showcreateProjetModal = true;
     }
 
     private void CreateNewTache()
     {
+        ErrorMessage = null;
         NewTache = new TacheCreateDTO
         {
             DateDebut = DateTime.Now,
@@ -588,8 +725,9 @@
 
     private async Task SaveNewTache()
     {
-        if (string.IsNullOrWhiteSpace(NewTache.Nom)) return;
+        ErrorMessage = null;
 
+        // La validation est déjà faite par <EditForm>, mais on garde des sécurités
         if (SelectedProjet != null)
         {
             NewTache.ProjetId = SelectedProjet.Id;
@@ -597,28 +735,55 @@
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             if (int.TryParse(userIdString, out int userId))
             {
                 NewTache.EmployeAssigneId = userId;
             }
         }
-        try{
 
+        try
+        {
             var createdTache = await TacheService.Post(NewTache);
             Taches.Add(createdTache);
 
-            SelectedTache = createdTache; 
+            SelectedTache = createdTache;
             showcreateTacheModal = false;
             await InvokeAsync(StateHasChanged);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors de la création de la tâche : {ex.Message}");
+            ErrorMessage = $"Erreur lors de la création de la tâche : {ex.Message}";
+            Console.WriteLine(ErrorMessage);
+        }
+    }
+
+    public async Task SaveNewEntite()
+    {
+        ErrorMessage = null;
+
+        if (!NewEntite.EstEntreprise)
+        {
+            NewEntite.Adresse = null;
+        }
+
+        try
+        {
+            var createdtache = await EntiteService.Post(NewEntite);
+            ShowModalCreateEntite = false;
+            Entites = await EntiteService.GetAll();
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch(Exception ex){
+            ErrorMessage = $"Erreur lors de la création de l'entité : {ex.Message}";
+            if (NewEntite.EstEntreprise && NewEntite.Adresse == null)
+            {
+                NewEntite.Adresse = new AdresseCreateDTO();
+            }
+            Console.WriteLine(ErrorMessage);
         }
     }
 
@@ -626,15 +791,18 @@
 
     private async Task SaveNewProjet()
     {
-        if (string.IsNullOrWhiteSpace(NewProjet.Nom)) return;
-
-        var createdProjet = await ProjetService.Post(NewProjet);
-
-        GetProjets();
-
-        SelectedProjet = createdProjet;
-
-        showcreateProjetModal = false;
+        ErrorMessage = null;
+        try
+        {
+            var createdProjet = await ProjetService.Post(NewProjet);
+            await GetProjets();
+            SelectedProjet = createdProjet;
+            showcreateProjetModal = false;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la création du projet : {ex.Message}";
+        }
     }
 
     private string GetClassForProjet(ProjetDTO p)
@@ -647,13 +815,11 @@
     private async void InitCalendrier()
     {
         if (SelectedProjet == null) return;
-
         EmployesDuProjet = SelectedProjet.Taches
             .Where(t => t.EmployeAssigneId.HasValue)
             .GroupBy(t => t.EmployeAssigneId)
             .Select(g => g.First())
             .ToList();
-
         if (EmployesDuProjet.Any())
         {
             SelectedEmployeId = EmployesDuProjet.First().EmployeAssigneId ?? 0;
@@ -664,28 +830,23 @@
     private async Task LoadCalendrierData()
     {
         if (SelectedEmployeId == 0) return;
-
         IsLoadingCalendrier = true;
+        ErrorMessage = null;
         StateHasChanged();
 
         try
         {
             FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee, SelectedProjet.Id);
-
-            Console.WriteLine($"Chargement : {FeuillesTemps.Count} feuilles de temps");
-            foreach (var ft in FeuillesTemps)
-            {
-                Console.WriteLine($"  - Date: {ft.Date:yyyy-MM-dd}, Matin: {ft.EstMatin}, Projet: {ft.ProjetNom}");
-            }
-
             CalculateDates();
-
-            Console.WriteLine($"Période : {StartOfWeek:yyyy-MM-dd} à {EndOfWeek:yyyy-MM-dd}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur chargement calendrier : {ex.Message}";
         }
         finally
         {
             IsLoadingCalendrier = false;
-            StateHasChanged(); 
+            StateHasChanged();
         }
     }
 
@@ -694,10 +855,8 @@
         var jan4 = new DateTime(Annee, 1, 4);
         int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
         var firstMonday = jan4.AddDays(-daysOffset);
-
         StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
         EndOfWeek = StartOfWeek.AddDays(4);
-
         JoursSemaine = new List<JourSemaine>
         {
             new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
@@ -713,7 +872,7 @@
         var now = DateTime.Now;
         NumSemaine = ISOWeek.GetWeekOfYear(now);
         Annee = now.Year;
-        await LoadCalendrierData(); 
+        await LoadCalendrierData();
         StateHasChanged();
     }
 
@@ -721,7 +880,6 @@
     {
         var feuille = FeuillesTemps.FirstOrDefault(f =>
             f.Date.Date == date.Date && f.EstMatin == estMatin);
-
         var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
 
         builder.OpenElement(0, "div");
@@ -740,9 +898,6 @@
                 builder.AddContent(10, feuille.Commentaire);
                 builder.CloseElement();
             }
-
-
-
             builder.CloseElement();
         }
         else
@@ -761,17 +916,7 @@
         EditingFeuille = feuille;
         ModalDate = date;
         ModalEstMatin = estMatin;
-
-        if (feuille != null)
-        {
-            ModalCommentaire = feuille.Commentaire;
-        }
-        else
-        {
-
-            ModalCommentaire = null;
-        }
-
+        ModalCommentaire = feuille?.Commentaire;
         ShowModal = true;
     }
 
@@ -781,8 +926,23 @@
         EditingFeuille = null;
     }
 
+    public void OpenModalEntite()
+    {
+        NewEntite = new EntiteCreateDTO
+        {
+            Adresse = new AdresseCreateDTO()
+        };
+
+        ShowModalCreateEntite = true;
+    }
+    public void CloseModalEntite()
+    {
+        ShowModalCreateEntite = false;
+    }
+
     private async Task SaveFeuille()
     {
+        ErrorMessage = null;
         try
         {
             if (EditingFeuille != null)
@@ -811,7 +971,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors de l'enregistrement : {ex.Message}");
+            ErrorMessage = $"Erreur lors de l'enregistrement de la feuille de temps : {ex.Message}";
         }
     }
 
