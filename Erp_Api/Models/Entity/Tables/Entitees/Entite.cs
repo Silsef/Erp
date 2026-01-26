@@ -19,6 +19,9 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("ent_telephone")]
         public string? Telephone { get; set; }
 
+        [Column("ent_siret")]
+        public string? Siret { get; set; }
+
         [Column("ent_est_entreprise")]
         public bool EstEntreprise { get; set; } = true;
 

@@ -16,7 +16,6 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet
                 .Include(c => c.Offre)
                 .Include(c => c.Employe)
-                .Include(c => c.Status)
                 .Include(c => c.Plateforme)
                 .FirstOrDefaultAsync(c => c.Nom == name);
         }
@@ -26,7 +25,6 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet
                 .Include(c => c.Offre)
                 .Include(c => c.Employe)
-                .Include(c => c.Status)
                 .Include(c => c.Plateforme)
                 .OrderByDescending(c => c.DateCandidature)
                 .ToListAsync();
@@ -37,7 +35,6 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet
                 .Include(c => c.Offre)
                 .Include(c => c.Employe)
-                .Include(c => c.Status)
                 .Include(c => c.Plateforme)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
@@ -47,7 +44,6 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
             return await dbSet
                 .Include(c => c.Offre)
                 .Include(c => c.Employe)
-                .Include(c => c.Status)
                 .Include(c => c.Plateforme)
                 .Where(c => c.OffreEmploiId == offreId)
                 .OrderByDescending(c => c.DateCandidature)

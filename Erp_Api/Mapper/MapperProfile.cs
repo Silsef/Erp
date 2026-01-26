@@ -92,6 +92,9 @@ namespace Erp_Api.Mapper
             CreateMap<TypeProjet,TypeProjetUpdateDTO>().ReverseMap();
             CreateMap<TypeProjet, TypeProjetDTO>().ReverseMap();
 
+            CreateMap<Adresse,AdresseCreateDTO>().ReverseMap();
+            CreateMap<Adresse, AdresseDTO>().ReverseMap();
+
         }
     }
 }

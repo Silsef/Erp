@@ -14,7 +14,7 @@ namespace Shared_Erp.Entite
         public string Nom { get; set; } = null!;
         public string? Telephone { get; set; }
         public bool EstEntreprise { get; set; } = true;
-
+        public string? Siret { get; set; }
     }
 
     public class EntiteCreateDTO
@@ -22,7 +22,9 @@ namespace Shared_Erp.Entite
         public string Nom { get; set; } = null!;
         public string? Telephone { get; set; }
         public bool EstEntreprise { get; set; } = true;
+        public string? Siret {  get; set; }
         public AdresseCreateDTO Adresse { get; set; } = null!;
+
     }
 
     public class EntiteUpdateDTO
@@ -30,6 +32,9 @@ namespace Shared_Erp.Entite
         public int Id { get; set; }
         public string Nom { get; set; } = null!;
         public string? Telephone { get; set; }
-        public bool EstEntreprise { get; set; } = true;
+        public string? Siret { get; set; }
+        public bool? EstEntreprise { get; set; } = true;
+        public AdresseCreateDTO Adresse { get; set; } = null!;
+
     }
 }
