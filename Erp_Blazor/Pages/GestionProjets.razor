@@ -450,14 +450,24 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Employé asigné</label>
-                            <InputSelect class="form-select" @bind-Value="NewTache.EmployeAssigneId">
-                                @foreach (var emp in Employes)
-                                {
-                                    <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
-                                }
-                            </InputSelect>
+                            <label class="form-label">Employé assigné</label>
+                            @if (IsChefDeProjet)
+                            {
+                                <InputSelect class="form-select" @bind-Value="NewTache.EmployeAssigneId">
+                                    <option value="">-- Sélectionner un employé --</option>
+                                    @foreach (var emp in Employes)
+                                    {
+                                        <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
+                                    }
+                                </InputSelect>
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control" value="@EmployeConnecteNom (vous)" disabled />
+                                <small class="form-text text-muted">Seul un chef de projet peut assigner une tâche à quelqu'un d'autre</small>
+                            }
                         </div>
+
 
                         <div class="mb-3">
                             <label class="form-label">Tache Parente</label>
@@ -674,17 +684,19 @@
 
         // Récupérer les infos de l'utilisateur connecté
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        _user = authState.User;
 
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        if (_user.Identity != null && _user.Identity.IsAuthenticated)
         {
-            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdString = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdString, out int userId))
             {
                 EmployeConnecteId = userId;
-                var prenom = user.FindFirst("prenom")?.Value ?? "";
-                var nom = user.FindFirst("nom")?.Value ?? "";
+                var prenom = _user.FindFirst("prenom")?.Value ?? "";
+                var nom = _user.FindFirst("nom")?.Value ?? "";
                 EmployeConnecteNom = $"{prenom} {nom}";
+                IsChefDeProjet = _user.IsInRole("Chef de projet");
+
             }
 
             Entites = await EntiteService.GetAll();
@@ -740,9 +752,6 @@
         try
         {
             Taches = await TacheService.GetTachesByProjetId(projet.Id);
-
-  
-            IsChefDeProjet = _user.IsInRole("Chef de Projet");
         }
         catch (Exception ex)
         {
@@ -800,7 +809,7 @@
             NewTache.ProjetId = SelectedProjet.Id;
         }
 
-        if (NewTache.EmployeAssigneId == null)
+        if (!IsChefDeProjet || NewTache.EmployeAssigneId == null)
         {
             NewTache.EmployeAssigneId = EmployeConnecteId;
         }

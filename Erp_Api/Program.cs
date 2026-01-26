@@ -121,7 +121,8 @@ builder.Services.AddCors(options =>
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials();  // Important pour les cookies
+            .AllowCredentials();
+
     });
 });
 
@@ -138,7 +139,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// *** UTILISER CORS - DOIT ÊTRE AVANT Authentication/Authorization ***
 app.UseCors("AllowBlazorClient");
 
 app.UseAuthentication();
