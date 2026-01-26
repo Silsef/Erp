@@ -20,7 +20,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public string Nom { get; set; } = null!;
 
         [Column("tac_Description")]
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; } = null!;
 
         [Column("tac_datedebut")]
         public DateTime DateDebut { get; set; }

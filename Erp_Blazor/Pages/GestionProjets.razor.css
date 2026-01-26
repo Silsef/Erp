@@ -50,6 +50,9 @@
     margin-bottom: 20px;
 }
 
+.leftmargin {
+    padding-left: 5px;
+}
 .nav-link {
     cursor: pointer;
     color: #495057;

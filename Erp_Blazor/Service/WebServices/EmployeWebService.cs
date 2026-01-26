@@ -16,9 +16,20 @@ namespace Erp_Blazor.Service.WebServices
             return await _client.GetFromJsonAsync<EmployeDTO>($"{_endpoint}/GetByNom/{Nom}");
         }
 
-        public async Task<List<EmployeDTO>> GetEmployeesByEntiteEtProjet(int identite,int? idproj)
+        public async Task<List<EmployeDTO>> GetEmployeesByEntiteEtProjet(int? identite, int? idproj)
         {
-            return await _client.GetFromJsonAsync<List<EmployeDTO>>($"{_endpoint}/GetEmployeesByEntiteEtProjet/{identite}");
+            string url;
+
+            if (idproj.HasValue)
+            {
+                url = $"{_endpoint}/GetEmployeesByEntiteEtProjet/{identite}/{idproj.Value}";
+            }
+            else
+            {
+                url = $"{_endpoint}/GetEmployeesByEntiteEtProjet/{identite}";
+            }
+
+            return await _client.GetFromJsonAsync<List<EmployeDTO>>(url);
         }
     }
 }
