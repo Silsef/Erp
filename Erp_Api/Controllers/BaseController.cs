@@ -54,6 +54,8 @@ namespace Erp_Api.Controllers
         [HttpPut("{id}")]
         public virtual async Task<ActionResult<TDto>> Update(int id, [FromBody] TUpdateDto dto)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var existing = await _manager.GetByIdAsync(id);
             if (existing == null) return NotFound();
 
@@ -65,6 +67,8 @@ namespace Erp_Api.Controllers
         [HttpDelete("{id}")]
         public virtual async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var entity = await _manager.GetByIdAsync(id);
             if (entity == null) return NotFound();
 

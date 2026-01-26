@@ -1,4 +1,5 @@
 using Erp_Api.Mapper;
+using Erp_Api.Models.Authentification;
 using Erp_Api.Models.Entity;
 using Erp_Api.Models.Repository.Managers.Models_Managers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -101,7 +102,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ChefProjetPolicy", Policies.ChefProjetPolicy());
+
+    // Vous pouvez aussi enregistrer les autres
+    options.AddPolicy("AdminPolicy", Policies.AdminLogged());
+});
 
 // *** CONFIGURATION CORS - IMPORTANT ***
 builder.Services.AddCors(options =>

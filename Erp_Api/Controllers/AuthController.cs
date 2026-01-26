@@ -1,13 +1,14 @@
-﻿using Erp_Api.Models.Repository.Managers.Models_Managers;
+﻿using BCrypt.Net;
+using Erp_Api.Models.Entity;
+using Erp_Api.Models.Entity.Tables.Entitees;
+using Erp_Api.Models.Repository.Managers.Models_Managers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Shared_Erp.Auth;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Shared_Erp.Auth;
-using BCrypt.Net;
-using Erp_Api.Models.Entity;
-using Erp_Api.Models.Entity.Tables.Entitees;
 
 namespace Erp_Api.Controllers
 {
@@ -39,8 +40,10 @@ namespace Erp_Api.Controllers
             if (!BCrypt.Net.BCrypt.Verify(request.Password, employe.PasswordHash))
                 return Unauthorized(new { message = "Email ou mot de passe incorrect" });
 
+            var roles = employe.Employeroles.Select(r => r.Role.Nom).ToList();
+
             // Générer le token JWT
-            var token = GenerateJwtToken(employe.Id, employe.Email, employe.Nom, employe.Prenom);
+            var token = GenerateJwtToken(employe.Id, employe.Email, employe.Nom, employe.Prenom, roles);
 
             // Créer le cookie HTTP-only
             Response.Cookies.Append("access_token", token, new CookieOptions
@@ -87,8 +90,10 @@ namespace Erp_Api.Controllers
 
             await _employeManager.AddAsync(emp);
 
+            var roles = emp.Employeroles.Select(r => r.Role.Nom).ToList();
+
             // Générer le token JWT
-            var token = GenerateJwtToken(emp.Id, emp.Email, emp.Nom, emp.Prenom);
+            var token = GenerateJwtToken(emp.Id, emp.Email, emp.Nom, emp.Prenom, roles);
 
             // Créer le cookie HTTP-only
             Response.Cookies.Append("access_token", token, new CookieOptions
@@ -164,26 +169,30 @@ namespace Erp_Api.Controllers
             }
         }
 
-        private string GenerateJwtToken(int employeId, string email, string nom, string prenom)
+        private string GenerateJwtToken(int employeId, string email, string nom, string prenom, List<string> roles)
         {
             var securityKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["App:Jwt:SecretKey"])
             );
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, employeId.ToString()),                
+                new Claim(ClaimTypes.NameIdentifier, employeId.ToString()),
                 new Claim(ClaimTypes.Email, email),
                 new Claim("nom", nom),
-                new Claim("prenom", prenom),
-                new Claim(ClaimTypes.Role, "Authorized")
+                new Claim("prenom", prenom)
             };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["App:Jwt:Issuer"],
                 audience: _configuration["App:Jwt:Audience"],
-                claims: claims,
+                claims: claims, 
                 expires: DateTime.UtcNow.AddHours(24),
                 signingCredentials: credentials
             );

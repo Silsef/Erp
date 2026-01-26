@@ -46,7 +46,7 @@ namespace Erp_Api.Models.Repository.Managers.Models_Managers
                 query = query.Where(a=>a.ProjetsResponsable.Any(a=>a.Id == idprojet));
             }
 
-            return await dbSet
+            return await query
                 .Where(e=>e.EmployeEntites.Any(ee=>ee.EntiteId == entiteId)).ToListAsync();
         }
     }

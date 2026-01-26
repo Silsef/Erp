@@ -212,15 +212,27 @@
                             <h3>📅 Feuilles de temps - @SelectedProjet.Nom</h3>
 
                             <div class="controls-row">
-                                <div class="control-group">
-                                    <label>Employé :</label>
-                                    <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
-                                        @foreach (var emp in EmployesDuProjet)
-                                        {
-                                            <option value="@emp.EmployeAssigneId">@emp.EmployeAssigneNom</option>
-                                        }
-                                    </select>
-                                </div>
+                                @* Sélection de l'employé (uniquement pour les chefs de projet) *@
+                                @if (IsChefDeProjet)
+                                {
+                                    <div class="control-group">
+                                        <label>Employé :</label>
+                                        <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
+                                            @foreach (var emp in EmployesDuProjet)
+                                            {
+                                                <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
+                                            }
+                                        </select>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="control-group">
+                                        <label>Employé :</label>
+                                        <input type="text" class="form-control" value="@EmployeConnecteNom" disabled />
+                                    </div>
+                                }
+
                                 <div class="control-group">
                                     <label>Semaine :</label>
                                     <input type="number" class="form-control" min="1" max="53"
@@ -296,11 +308,16 @@
                                                    value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Commentaire</label>
-                                            <textarea class="form-control" rows="3" @bind="ModalCommentaire"></textarea>
+                                            <label class="form-label"><strong>Qu'avez-vous fait ?</strong></label>
+                                            <textarea class="form-control" rows="5" @bind="ModalCommentaire"
+                                                      placeholder="Décrivez ce que vous avez réalisé pendant cette demi-journée..."></textarea>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
+                                        @if (EditingFeuille != null && !IsChefDeProjet)
+                                        {
+                                            <button type="button" class="btn btn-danger me-auto" @onclick="DeleteFeuille">Supprimer</button>
+                                        }
                                         <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
                                         <button type="button" class="btn btn-primary" @onclick="SaveFeuille">Enregistrer</button>
                                     </div>
@@ -441,7 +458,6 @@
                                 }
                             </InputSelect>
                         </div>
-
 
                         <div class="mb-3">
                             <label class="form-label">Tache Parente</label>
@@ -625,9 +641,15 @@
     private string ActiveTab = "overview";
     private string? ErrorMessage;
 
+    // Variables de l'utilisateur connecté
+    private int EmployeConnecteId;
+    private string EmployeConnecteNom = "";
+    private bool IsChefDeProjet = false;
+    private ClaimsPrincipal _user;
+
     // Calendrier vars
     private List<FeuilleTempsDTO> FeuillesTemps = new();
-    private List<TacheDTO> EmployesDuProjet = new();
+    private List<EmployeDTO> EmployesDuProjet = new();
     private int SelectedEmployeId;
     private int NumSemaine;
     private int Annee;
@@ -649,8 +671,27 @@
     protected override async Task OnInitializedAsync()
     {
         EntiteState.OnChange += HandleEntiteChanged;
+
+        // Récupérer les infos de l'utilisateur connecté
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdString, out int userId))
+            {
+                EmployeConnecteId = userId;
+                var prenom = user.FindFirst("prenom")?.Value ?? "";
+                var nom = user.FindFirst("nom")?.Value ?? "";
+                EmployeConnecteNom = $"{prenom} {nom}";
+            }
+
+            Entites = await EntiteService.GetAll();
+        }
+
         await GetProjets();
-        Entites = await EntiteService.GetAll();
+
         NewProjet.DateDebut = DateTime.Now;
         NewProjet.Priorite = NiveauPriorite.Normale;
 
@@ -699,6 +740,9 @@
         try
         {
             Taches = await TacheService.GetTachesByProjetId(projet.Id);
+
+  
+            IsChefDeProjet = _user.IsInRole("Chef de Projet");
         }
         catch (Exception ex)
         {
@@ -737,7 +781,7 @@
     private async Task CreateNewTache(int? parentId = null)
     {
         ErrorMessage = null;
-        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId,SelectedProjet.Id);
+        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId, SelectedProjet.Id);
         NewTache = new TacheCreateDTO
         {
             DateDebut = DateTime.Now,
@@ -756,18 +800,9 @@
             NewTache.ProjetId = SelectedProjet.Id;
         }
 
-        if(NewTache.EmployeAssigneId == null){
-
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            if (user.Identity != null && user.Identity.IsAuthenticated)
-            {
-                var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdString, out int userId))
-                {
-                    NewTache.EmployeAssigneId = userId;
-                }
-            }
+        if (NewTache.EmployeAssigneId == null)
+        {
+            NewTache.EmployeAssigneId = EmployeConnecteId;
         }
 
         try
@@ -808,32 +843,68 @@
         return p == SelectedProjet ? "project-item active" : "project-item";
     }
 
-    // ... (Reste du code calendrier identique) ...
-    private async void InitCalendrier()
+    // ============================================
+    // CALENDRIER - NOUVELLE IMPLÉMENTATION
+    // ============================================
+
+    private async Task InitCalendrier()
     {
         if (SelectedProjet == null) return;
-        EmployesDuProjet = SelectedProjet.Taches
-            .Where(t => t.EmployeAssigneId.HasValue)
-            .GroupBy(t => t.EmployeAssigneId)
-            .Select(g => g.First())
-            .ToList();
-        if (EmployesDuProjet.Any())
+
+        IsLoadingCalendrier = true;
+        ErrorMessage = null;
+
+        try
         {
-            SelectedEmployeId = EmployesDuProjet.First().EmployeAssigneId ?? 0;
+            // Charger tous les employés du projet
+            EmployesDuProjet = await EmployeService.GetEmployeesByEntiteEtProjet(
+                EntiteState.SelectedEntiteId ?? 0,
+                SelectedProjet.Id
+            );
+
+            if (IsChefDeProjet)
+            {
+                // Chef de projet : afficher le premier employé de la liste
+                if (EmployesDuProjet.Any())
+                {
+                    SelectedEmployeId = EmployesDuProjet.First().Id;
+                }
+            }
+            else
+            {
+                SelectedEmployeId = EmployeConnecteId;
+            }
+
             await LoadCalendrierData();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de l'initialisation du calendrier : {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingCalendrier = false;
+            StateHasChanged();
         }
     }
 
     private async Task LoadCalendrierData()
     {
         if (SelectedEmployeId == 0) return;
+
         IsLoadingCalendrier = true;
         ErrorMessage = null;
         StateHasChanged();
 
         try
         {
-            FeuillesTemps = await FeuilleTempsService.GetBySemaine(SelectedEmployeId, NumSemaine, Annee, SelectedProjet.Id);
+            FeuillesTemps = await FeuilleTempsService.GetBySemaine(
+                SelectedEmployeId,
+                NumSemaine,
+                Annee,
+                SelectedProjet.Id
+            );
+
             CalculateDates();
         }
         catch (Exception ex)
@@ -849,11 +920,14 @@
 
     private void CalculateDates()
     {
+        // Calcul ISO 8601 de la semaine
         var jan4 = new DateTime(Annee, 1, 4);
         int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
         var firstMonday = jan4.AddDays(-daysOffset);
+
         StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
-        EndOfWeek = StartOfWeek.AddDays(4);
+        EndOfWeek = StartOfWeek.AddDays(4); // Vendredi
+
         JoursSemaine = new List<JourSemaine>
         {
             new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
@@ -870,46 +944,85 @@
         NumSemaine = ISOWeek.GetWeekOfYear(now);
         Annee = now.Year;
         await LoadCalendrierData();
-        StateHasChanged();
     }
 
     private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
     {
         var feuille = FeuillesTemps.FirstOrDefault(f =>
             f.Date.Date == date.Date && f.EstMatin == estMatin);
+
+        // Déterminer si la cellule est éditable
+        bool isEditable = !IsChefDeProjet && SelectedEmployeId == EmployeConnecteId;
         var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
+
+        if (!isEditable)
+        {
+            cellClass += " read-only";
+        }
 
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", cellClass);
-        builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
+
+        if (isEditable)
+        {
+            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
+        }
 
         if (feuille != null)
         {
             builder.OpenElement(3, "div");
             builder.AddAttribute(4, "class", "cell-content");
 
+            builder.OpenElement(5, "div");
+            builder.AddAttribute(6, "class", "presence-indicator");
+            builder.AddContent(7, "✓ Présent");
+            builder.CloseElement();
+
             if (!string.IsNullOrEmpty(feuille.Commentaire))
             {
                 builder.OpenElement(8, "div");
                 builder.AddAttribute(9, "class", "commentaire");
-                builder.AddContent(10, feuille.Commentaire);
+                builder.AddContent(10, TruncateText(feuille.Commentaire, 50));
                 builder.CloseElement();
             }
+
             builder.CloseElement();
         }
         else
         {
-            builder.OpenElement(14, "div");
-            builder.AddAttribute(15, "class", "cell-empty-text");
-            builder.AddContent(16, "+ Ajouter");
-            builder.CloseElement();
+            if (isEditable)
+            {
+                builder.OpenElement(11, "div");
+                builder.AddAttribute(12, "class", "cell-empty-text");
+                builder.AddContent(13, "+ Ajouter");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(14, "div");
+                builder.AddAttribute(15, "class", "cell-empty-text");
+                builder.AddContent(16, "—");
+                builder.CloseElement();
+            }
         }
 
         builder.CloseElement();
     };
 
+    private string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+
+        return text.Substring(0, maxLength) + "...";
+    }
+
     private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
     {
+        // Seuls les employés peuvent modifier leurs propres feuilles
+        if (IsChefDeProjet || SelectedEmployeId != EmployeConnecteId)
+            return;
+
         EditingFeuille = feuille;
         ModalDate = date;
         ModalEstMatin = estMatin;
@@ -921,7 +1034,68 @@
     {
         ShowModal = false;
         EditingFeuille = null;
+        ModalCommentaire = null;
     }
+
+    private async Task SaveFeuille()
+    {
+        ErrorMessage = null;
+
+        try
+        {
+            if (EditingFeuille != null)
+            {
+                // Modification
+                var updateDto = new FeuilleTempsUpdateDTO
+                {
+                    Id = EditingFeuille.Id,
+                    Commentaire = ModalCommentaire
+                };
+                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
+            }
+            else
+            {
+                // Création
+                var createDto = new FeuilleTempsCreateDTO
+                {
+                    Date = ModalDate,
+                    EstMatin = ModalEstMatin,
+                    ProjetId = SelectedProjet?.Id,
+                    Commentaire = ModalCommentaire
+                };
+                await FeuilleTempsService.Post(createDto);
+            }
+
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de l'enregistrement : {ex.Message}";
+        }
+    }
+
+    private async Task DeleteFeuille()
+    {
+        if (EditingFeuille == null) return;
+
+        ErrorMessage = null;
+
+        try
+        {
+            await FeuilleTempsService.Delete(EditingFeuille.Id);
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la suppression : {ex.Message}";
+        }
+    }
+
+    // ============================================
+    // GESTION DES ENTITÉS
+    // ============================================
 
     private void OnTypeEntiteChanged(bool estEntreprise)
     {
@@ -956,7 +1130,7 @@
 
         try
         {
-            var createdtache = await EntiteService.Post(NewEntite);
+            await EntiteService.Post(NewEntite);
             ShowModalCreateEntite = false;
             Entites = await EntiteService.GetAll();
             await InvokeAsync(StateHasChanged);
@@ -969,40 +1143,6 @@
                 NewEntite.Adresse = new AdresseCreateDTO();
             }
             Console.WriteLine(ErrorMessage);
-        }
-    }
-
-    private async Task SaveFeuille()
-    {
-        ErrorMessage = null;
-        try
-        {
-            if (EditingFeuille != null)
-            {
-                var updateDto = new FeuilleTempsUpdateDTO
-                {
-                    Id = EditingFeuille.Id,
-                    Commentaire = ModalCommentaire
-                };
-                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
-            }
-            else
-            {
-                var createDto = new FeuilleTempsCreateDTO
-                {
-                    Date = ModalDate,
-                    EstMatin = ModalEstMatin,
-                    ProjetId = SelectedProjet?.Id,
-                    Commentaire = ModalCommentaire
-                };
-                await FeuilleTempsService.Post(createDto);
-            }
-            await LoadCalendrierData();
-            CloseModal();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors de l'enregistrement de la feuille de temps : {ex.Message}";
         }
     }
 

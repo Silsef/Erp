@@ -1,7 +1,7 @@
 ﻿using Erp_Api.Models.Entity;
 using Erp_Api.Models.Entity.Tables.Entitees;
 using Erp_Api.Models.Repository.Interfaces;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Erp_Api.Models.Repository.Managers.Models_Managers
 {
