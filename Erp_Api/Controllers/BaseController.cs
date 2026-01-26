@@ -43,6 +43,9 @@ namespace Erp_Api.Controllers
         [HttpPost]
         public virtual async Task<ActionResult<TDto>> Create([FromBody] TCreateDto dto)
         {
+
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+
             var entity = _mapper.Map<TEntity>(dto);
             var result = await _manager.AddAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = GetEntityId(result) }, _mapper.Map<TDto>(result));
