@@ -35,11 +35,13 @@ namespace Erp_Api.Controllers
 
         [HttpGet("{identite}")]
         [HttpGet("{identite}/{idprojet}")]
-        public async Task<ActionResult<IEnumerable<EmployeDTO>>> GetEmployeesByEntiteEtPProjet(int identite,int? idprojet)
+        public async Task<ActionResult<IEnumerable<EmployeDTO>>> GetEmployeesByEntiteEtProjet(int identite,int? idprojet)
         {
-            var taches = await employeManager.GetEmployeesByEntiteEtProjet(identite,idprojet);
+            var employes = await employeManager.GetEmployeesByEntiteEtProjet(identite,idprojet);
 
-            return Ok(_mapper.Map<IEnumerable<EmployeDTO>>(taches));
+            return Ok(_mapper.Map<IEnumerable<EmployeDTO>>(employes));
         }
+
+        
     }
 }

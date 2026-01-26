@@ -1,5 +1,6 @@
 ﻿using Erp_Blazor.Service.Interfaces;
 using Shared_Erp.Employe;
+using Shared_Erp.Entite;
 using System.Net.Http.Json;
 
 namespace Erp_Blazor.Service.WebServices
@@ -13,6 +14,11 @@ namespace Erp_Blazor.Service.WebServices
         public async Task<EmployeDTO> GetByNom(string Nom)
         {
             return await _client.GetFromJsonAsync<EmployeDTO>($"{_endpoint}/GetByNom/{Nom}");
+        }
+
+        public async Task<List<EmployeDTO>> GetEmployeesByEntiteEtProjet(int identite,int? idproj)
+        {
+            return await _client.GetFromJsonAsync<List<EmployeDTO>>($"{_endpoint}/GetEmployeesByEntiteEtProjet/{identite}");
         }
     }
 }

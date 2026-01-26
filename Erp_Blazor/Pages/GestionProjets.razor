@@ -597,8 +597,8 @@
         </div>
     };
 
-    // ... (Le reste des déclarations variables reste identique) ...
     private List<ProjetDTO> Projetsinternes = new List<ProjetDTO>();
+    private List<EmployeDTO> Employes = new List<EmployeDTO>();
     private List<ProjetDTO> Projetsexternes = new List<ProjetDTO>();
     private List<EntiteDTO> Entites = new List<EntiteDTO>();
     private List<TacheDTO> Taches = new List<TacheDTO>();
@@ -725,6 +725,7 @@
     private void CreateNewTache(int? parentId = null)
     {
         ErrorMessage = null;
+        Employes = EmployeService.GetEmployeesByEntiteEtProjet(SelectedProjet.Id);
         NewTache = new TacheCreateDTO
         {
             DateDebut = DateTime.Now,
@@ -743,14 +744,17 @@
             NewTache.ProjetId = SelectedProjet.Id;
         }
 
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity != null && user.Identity.IsAuthenticated)
-        {
-            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdString, out int userId))
+        if(NewTache.EmployeAssigneId == null){
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity != null && user.Identity.IsAuthenticated)
             {
-                NewTache.EmployeAssigneId = userId;
+                var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdString, out int userId))
+                {
+                    NewTache.EmployeAssigneId = userId;
+                }
             }
         }
 
@@ -759,8 +763,6 @@
             var createdTache = await TacheService.Post(NewTache);
             Taches.Add(createdTache);
 
-            // On ne sélectionne pas forcément la nouvelle tâche pour rester sur la vue arbre
-            // SelectedTache = createdTache;
             showcreateTacheModal = false;
             await InvokeAsync(StateHasChanged);
         }
