@@ -19,9 +19,14 @@ namespace Shared_Erp.Projet
 
         public int? EntiteRealisatriceId { get; set; }
 
+        [Required(ErrorMessage = "L'entité cliente est obligatoire")]
         [Range(1, int.MaxValue, ErrorMessage = "L'entité cliente doit être sélectionnée")]
         public int? EntiteClienteId { get; set; }
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
+
+
+        [Required(ErrorMessage = "Le type de projet est obligatoire")]
+        [Range(1, int.MaxValue, ErrorMessage = "Veuillez sélectionner un type de projet")]
         public int? TypeProjetId { get; set; }
     }
 }

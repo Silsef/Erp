@@ -22,6 +22,7 @@ namespace Shared_Erp.Projet
         public string? EntiteRealisatriceNom { get; set; }
         public string? EntiteClienteNom { get; set; }
         public NiveauPriorite Priorite { get; set; }
+        public Statut Statut { get; set; }
         public string? TypeProjetNom { get; set; }
         public int ? TypeProjetId { get; set; }
         public List<TacheDTO> Taches { get; set; } = new List<TacheDTO>();

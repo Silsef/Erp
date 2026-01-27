@@ -17,7 +17,7 @@ namespace Shared_Erp.Tache
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public StatutTache Statut { get; set; }
+        public Statut Statut { get; set; }
         public NiveauPriorite Priorite { get; set; }
         public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; } 
@@ -47,7 +47,7 @@ namespace Shared_Erp.Tache
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public StatutTache Statut { get; set; }
+        public Statut Statut { get; set; }
         public NiveauPriorite Priorite { get; set; } 
         public int? ProjetId { get; set; }
         public int? EmployeAssigneId { get; set; }

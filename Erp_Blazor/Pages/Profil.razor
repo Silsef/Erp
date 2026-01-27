@@ -292,7 +292,8 @@
                         @foreach (var projet in Projets)
                         {
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="projet-card">
+                                <div class="projet-card"
+                                     @onclick='() => NavManager.NavigateTo($"/projets?ProjetId={projet.Id}")'>
                                     <div class="projet-header">
                                         <h5>@projet.Nom</h5>
                                         <span class="badge bg-@GetPriorityBadge(projet.Priorite)">

@@ -29,7 +29,7 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         public DateTime? DateFin { get; set; }
 
         [Column("tac_statut")]
-        public StatutTache Statut { get; set; } = StatutTache.A_Faire;
+        public Statut Statut { get; set; } = Statut.En_Cours;
 
         [Column("tac_priorite")]
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;

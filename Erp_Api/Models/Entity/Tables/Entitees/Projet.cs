@@ -49,6 +49,8 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
         [Column("pro_priorite")] 
         public NiveauPriorite Priorite { get; set; } = NiveauPriorite.Normale;
 
+        [Column("pro_statut")]
+        public Statut Statut { get; set; } = Statut.En_Cours;
         public ICollection<Tache> Taches { get; set; } = new List<Tache>();
 
         [Column("pro_employeresponsable_id")]

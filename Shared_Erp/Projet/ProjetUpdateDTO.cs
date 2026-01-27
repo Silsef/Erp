@@ -21,5 +21,7 @@ namespace Shared_Erp.Projet
         public string? EntiteClienteNom { get; set; }
         public NiveauPriorite Priorite { get; set; }
         public int? TypeProjetId { get; set; }
+        public Statut Statut { get; set; }
+
     }
 }
