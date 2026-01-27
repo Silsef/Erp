@@ -32,6 +32,7 @@ namespace Erp_Api.Controllers
             {
                 return Unauthorized(); 
             }
+
             var result = await _manager.AddAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, _mapper.Map<ProjetDTO>(result));
         }

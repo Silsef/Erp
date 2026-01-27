@@ -17,8 +17,8 @@ namespace Shared_Erp.Projet
         public string? Description { get; set; }
         public DateTime DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public string? EntiteRealisatriceNom { get; set; }
-        public string? EntiteClienteNom { get; set; }
+        public int? EntiteRealisatriceId { get; set; }
+        public int? EntiteClienteId{ get; set; }
         public NiveauPriorite Priorite { get; set; }
         public int? TypeProjetId { get; set; }
         public Statut Statut { get; set; }

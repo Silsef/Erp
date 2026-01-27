@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Shared_Erp.Attributes;
 using Shared_Erp.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Shared_Erp.Projet
 {
@@ -15,6 +16,7 @@ namespace Shared_Erp.Projet
         [Required(ErrorMessage = "La date de début est obligatoire")]
         public DateTime DateDebut { get; set; }
 
+        [DateSuperieure(nameof(DateDebut), ErrorMessage = "La fin doit être après le début")]
         public DateTime? DateFin { get; set; }
 
         public int? EntiteRealisatriceId { get; set; }
