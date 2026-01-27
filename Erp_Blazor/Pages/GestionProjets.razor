@@ -21,6 +21,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @implements IDisposable
 @inject EntiteState EntiteState
+@inject NavigationManager NavManager
 
 <h3>Gestion des Projets</h3>
 
@@ -100,6 +101,12 @@
                     <a class="nav-link @(ActiveTab == "calendrier" ? "active" : "")"
                        @onclick='() => { ActiveTab = "calendrier"; InitCalendrier(); }' style="cursor: pointer;">
                         Calendrier
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "participants" ? "active" : "")"
+                       @onclick='() => {ActiveTab = "participants"; LoadParticipants(); } ' style="cursor: pointer;">
+                        Participants
                     </a>
                 </li>
             </ul>
@@ -218,7 +225,7 @@
                                     <div class="control-group">
                                         <label>Employé :</label>
                                         <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
-                                            @foreach (var emp in EmployesDuProjet)
+                                            @foreach (var emp in Employes)
                                             {
                                                 <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
                                             }
@@ -338,6 +345,113 @@
                         </div>
                     }
                 }
+
+
+                @if (ActiveTab == "participants")
+                {
+                    <div class="animate fade-in mt-3">
+                        <div class="row">
+                            @* Boucle sur chaque employé *@
+                            @foreach (var emp in Employes)
+                            {
+                                // Récupération des tâches de l'employé pour ce projet
+                                var tasks = Taches.Where(t => t.EmployeAssigneId == emp.Id).OrderBy(t => t.DateDebut).ToList();
+
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header bg-white d-flex align-items-center py-3">
+                                            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
+                                                <span class="fw-bold">@emp.Prenom[0]@emp.Nom[0]</span>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">@emp.Prenom @emp.Nom</h6>
+                                                <small class="text-muted">@tasks.Count tâche(s)</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="list-group list-group-flush flex-grow-1">
+                                            @if (tasks.Any())
+                                            {
+                                                @foreach (var task in tasks)
+                                                {
+                                                    <button type="button" class="list-group-item list-group-item-action border-0 border-bottom py-3" @onclick="() => SelectTache(task)">
+                                                        <div class="d-flex w-100 justify-content-between align-items-start mb-1">
+                                                            <span class="fw-semibold text-truncate me-2" style="max-width: 70%;">@task.Nom</span>
+                                                            <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
+                                                                @task.Priorite
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-calendar2-week me-1"></i>
+                                                                @task.DateDebut.ToString("dd/MM")
+                                                                @if (task.DateFin.HasValue)
+                                                                {
+                                                                    <span>- @task.DateFin.Value.ToString("dd/MM")</span>
+                                                                }
+                                                            </small>
+
+                                                            @if (task.Statut == StatutTache.Termine)
+                                                            {
+                                                                <i class="bi bi-check-circle-fill text-success" title="Terminé"></i>
+                                                            }
+                                                            else if (task.DateFin.HasValue && task.DateFin < DateTime.Now)
+                                                            {
+                                                                <i class="bi bi-exclamation-triangle-fill text-danger" title="En retard"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="bi bi-hourglass-split text-secondary" title="@task.Statut.ToString().Replace("_"," ")"></i>
+                                                            }
+                                                        </div>
+                                                    </button>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4">
+                                                    <i class="bi bi-clipboard fs-1 mb-2 opacity-50"></i>
+                                                    <small>Aucune tâche assignée</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @{
+                                var unassigned = Taches.Where(t => t.EmployeAssigneId == null).ToList();
+                            }
+                            @if (unassigned.Any())
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100 border-warning shadow-sm">
+                                        <div class="card-header bg-warning bg-opacity-10 text-dark d-flex align-items-center py-3">
+                                            <i class="bi bi-question-circle-fill text-warning fs-4 me-3"></i>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">Non assignées</h6>
+                                                <small class="text-muted">@unassigned.Count tâche(s)</small>
+                                            </div>
+                                        </div>
+                                        <div class="list-group list-group-flush">
+                                            @foreach (var task in unassigned)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action border-0 border-bottom py-3" @onclick="() => SelectTache(task)">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <span class="fw-semibold">@task.Nom</span>
+                                                        <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
+                                                            @task.Priorite
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -373,6 +487,11 @@
                                 <ValidationMessage For="@(() => NewProjet.DateDebut)" />
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label class="form-label">Date de fin</label>
+                                <InputDate class="form-control" @bind-Value="NewProjet.DateFin" />
+                                <ValidationMessage For="@(() => NewProjet.DateFin)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Priorité</label>
                                 <InputSelect class="form-select" @bind-Value="NewProjet.Priorite">
                                     @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
@@ -394,7 +513,7 @@
                                 </InputSelect>
                                 <button type="button" class="btn btn-secondary" @onclick="OpenModalEntite">+</button>
                             </div>
-                            <ValidationMessage For="@(() => NewProjet.EntiteRealisatriceId)" />
+                            <ValidationMessage For="@(() => NewProjet.EntiteClienteId)" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Type de Projet</label>
@@ -616,7 +735,22 @@
                         @tache.Priorite
                     </span>
                     <span class="fw-bold leftmargin">@tache.Nom</span>
-                    <small class="text-muted ms-3"><i class="bi bi-person-circle"></i> @(tache.EmployeAssigneNom ?? "Non assigné")</small>
+                    <small class="text-muted ms-3">
+                        <i class="bi bi-person-circle"></i>
+
+                        @if (IsChefDeProjet && tache.EmployeAssigneId.HasValue)
+                        {
+                            <a href="profil/@tache.EmployeAssigneId"
+                               @onclick:stopPropagation="true"
+                               class="text-decoration-none fw-bold">
+                                @tache.EmployeAssigneNom
+                            </a>
+                        }
+                        else
+                        {
+                            @(tache.EmployeAssigneNom ?? "Non assigné")
+                        }
+                    </small>
                     @if (tache.Statut != StatutTache.A_Faire)
                     {
                         <span class="badge bg-info ms-2">@tache.Statut.ToString().Replace("_", " ")</span>
@@ -647,7 +781,8 @@
             }
         </div>
     };
-
+    [SupplyParameterFromQuery]
+    public int? ProjetId { get; set; }
     private List<ProjetDTO> Projetsinternes = new List<ProjetDTO>();
     private List<EmployeDTO> Employes = new List<EmployeDTO>();
     private List<ProjetDTO> Projetsexternes = new List<ProjetDTO>();
@@ -671,7 +806,6 @@
 
     // Calendrier vars
     private List<FeuilleTempsDTO> FeuillesTemps = new();
-    private List<EmployeDTO> EmployesDuProjet = new();
     private int SelectedEmployeId;
     private int NumSemaine;
     private int Annee;
@@ -712,6 +846,17 @@
             }
 
             Entites = await EntiteService.GetAll();
+        }
+
+
+        if (ProjetId.HasValue)
+        {
+            var projetAChercher = Projetsinternes.Concat(Projetsexternes)
+                                                 .FirstOrDefault(p => p.Id == ProjetId.Value);
+            if (projetAChercher != null)
+            {
+                await SelectProjet(projetAChercher);
+            }
         }
 
         await GetProjets();
@@ -802,7 +947,8 @@
     private async Task CreateNewTache(int? parentId = null)
     {
         ErrorMessage = null;
-        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId, SelectedProjet.Id);
+        int? idvide = null;
+        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId,idvide);
         NewTache = new TacheCreateDTO
         {
             DateDebut = DateTime.Now,
@@ -877,17 +1023,20 @@
 
         try
         {
-            // Charger tous les employés du projet
-            EmployesDuProjet = await EmployeService.GetEmployeesByEntiteEtProjet(
-                EntiteState.SelectedEntiteId ?? 0,
-                SelectedProjet.Id
-            );
+            if(Employes == null || !Employes.Any())
+            {
+                int? idvide = null;
+                Employes = await EmployeService.GetEmployeesByEntiteEtProjet(
+                    EntiteState.SelectedEntiteId ?? 0,
+                    idvide
+                );
+            }
 
             if (IsChefDeProjet)
             {
-                if (EmployesDuProjet.Any())
+                if (Employes.Any())
                 {
-                    SelectedEmployeId = EmployesDuProjet.First().Id;
+                    SelectedEmployeId = Employes.First().Id;
                 }
             }
             else
@@ -1166,6 +1315,27 @@
                 NewEntite.Adresse = new AdresseCreateDTO();
             }
             Console.WriteLine(ErrorMessage);
+        }
+    }
+
+    // Charge les employés si la liste est vide au moment du clic sur l'onglet
+    private async Task LoadParticipants()
+    {
+        if (Employes == null || !Employes.Any())
+        {
+            try
+            {
+                // On récupère les employés (même logique que InitCalendrier)
+                Employes = await EmployeService.GetEmployeesByEntiteEtProjet(
+                    EntiteState.SelectedEntiteId ?? 0,
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erreur chargement participants : {ex.Message}";
+            }
+            StateHasChanged();
         }
     }
 
