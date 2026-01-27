@@ -9,19 +9,15 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        // Appeler l'API pour supprimer le cookie
         await AuthService.LogoutAsync();
 
-        // Supprimer le token local
         await LocalStorage.RemoveItemAsync("authToken");
 
-        // Marquer l'utilisateur comme déconnecté
         if (AuthStateProvider is CustomAuthStateProvider customProvider)
         {
             await customProvider.MarkUserAsLoggedOut();
         }
 
-        // Rediriger vers la page de connexion
         NavigationManager.NavigateTo("/login", forceLoad: true);
     }
 }

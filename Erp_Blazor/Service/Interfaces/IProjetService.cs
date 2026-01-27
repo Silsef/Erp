@@ -6,5 +6,6 @@ namespace Erp_Blazor.Service.Interfaces
     {
         Task<List<ProjetDTO>> GetProjetsExternesByEntiteId(int entiteId);
         Task<List<ProjetDTO>> GetProjetsInternesByEntiteId(int entiteId);
+        Task<List<ProjetDTO>> GetProjetsByEmployeId(int employeid);
     }
 }

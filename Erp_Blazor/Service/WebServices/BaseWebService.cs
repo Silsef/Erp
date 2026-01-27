@@ -35,7 +35,7 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
     {
         try
         {
-            var result = await _client.GetFromJsonAsync<TRead>($"{_endpoint}/{id}");
+            var result = await _client.GetFromJsonAsync<TRead>($"{_endpoint}/GetById/{id}");
             if (result == null)
                 throw new Exception($"Élément avec l'ID {id} non trouvé");
             return result;
@@ -99,7 +99,7 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
     {
         try
         {
-            var response = await _client.PutAsJsonAsync($"{_endpoint}/{id}", item);
+            var response = await _client.PutAsJsonAsync($"{_endpoint}/Update/{id}", item);
 
             if (!response.IsSuccessStatusCode)
             {

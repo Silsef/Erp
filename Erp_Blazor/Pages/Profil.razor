@@ -1,0 +1,668 @@
+﻿@page "/profil"
+@page "/profil/{EmployeIdParam:int}"
+@using Erp_Blazor.Service.States
+@using Shared_Erp.Entite
+@using Shared_Erp.Enums
+@using Shared_Erp.Tache
+@using Shared_Erp.Adresse
+@using Shared_Erp.Employe
+@using Shared_Erp.FeuilleTemps
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+@inject IProjetService ProjetService
+@inject ITypeProjetService TypeProjetService
+@inject IEntiteService EntiteService
+@inject IFeuilleTempsService FeuilleTempsService
+@inject IEmployeService EmployeService
+@inject ITacheService TacheService
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Shared_Erp.TypeProjet
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IDisposable
+@inject EntiteState EntiteState
+@inject NavigationManager NavManager
+
+<PageTitle>Profil - @EmployeAffiche?.Prenom @EmployeAffiche?.Nom</PageTitle>
+
+<div class="profil-container">
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ErrorMessage
+            <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+        </div>
+    }
+
+    @if (IsLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary"></div>
+            <p>Chargement du profil...</p>
+        </div>
+    }
+    else if (EmployeAffiche != null)
+    {
+        <div class="profil-header">
+            <div class="profil-avatar">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <div class="profil-info">
+                <h2>@EmployeAffiche.Prenom @EmployeAffiche.Nom</h2>
+                <p class="text-muted">@EmployeAffiche.Email</p>
+                @if (IsOwnProfile)
+                {
+                    <span class="badge bg-primary">Mon profil</span>
+                }
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link @(ActiveTab == "infos" ? "active" : "")"
+                   @onclick='() => ActiveTab = "infos"' style="cursor: pointer;">
+                    <i class="bi bi-person-badge"></i> Informations
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ActiveTab == "calendrier" ? "active" : "")"
+                   @onclick='() => { ActiveTab = "calendrier"; InitCalendrier(); }' style="cursor: pointer;">
+                    <i class="bi bi-calendar-week"></i> Calendrier
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ActiveTab == "projets" ? "active" : "")"
+                   @onclick='() => ActiveTab = "projets"' style="cursor: pointer;">
+                    <i class="bi bi-folder"></i> Projets
+                </a>
+            </li>
+        </ul>
+
+        @* ===== TAB INFORMATIONS ===== *@
+        @if (ActiveTab == "infos")
+        {
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h5><i class="bi bi-person-lines-fill"></i> Informations personnelles</h5>
+                        <div class="info-row">
+                            <span class="info-label">Nom complet</span>
+                            <span class="info-value">@EmployeAffiche.Prenom @EmployeAffiche.Nom</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">@EmployeAffiche.Email</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Téléphone</span>
+                            <span class="info-value">@(EmployeAffiche.Telephone ?? "Non renseigné")</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Date de naissance</span>
+                            <span class="info-value">@EmployeAffiche.DateNaissance.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">N° Sécurité sociale</span>
+                            <span class="info-value">@MaskSecuriteSociale(EmployeAffiche.NumSecuriteSociale)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    @if (EmployeAffiche.Adresse != null)
+                    {
+                        <div class="info-card">
+                            <h5><i class="bi bi-geo-alt"></i> Adresse</h5>
+                            <div class="info-row">
+                                <span class="info-label">Rue</span>
+                                <span class="info-value">@EmployeAffiche.Adresse.Rue</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Ville</span>
+                                <span class="info-value">@EmployeAffiche.Adresse.CodePostal @EmployeAffiche.Adresse.Ville</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Pays</span>
+                                <span class="info-value">@EmployeAffiche.Adresse.Pays</span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (EmployeAffiche.EmployeEntites.Any())
+                    {
+                        <div class="info-card mt-3">
+                            <h5><i class="bi bi-building"></i> Entités</h5>
+                            @foreach (var entite in EmployeAffiche.EmployeEntites)
+                            {
+                                <div class="entite-item">
+                                    <strong>@entite.NomEntreprise</strong>
+                                    @if (!string.IsNullOrEmpty(entite.Poste))
+                                    {
+                                        <span class="badge bg-secondary ms-2">@entite.Poste</span>
+                                    }
+                                    <div class="text-muted small">
+                                        Du @entite.DateDebut.ToString("dd/MM/yyyy")
+                                        @if (entite.DateFin.HasValue)
+                                        {
+                                            <span> au @entite.DateFin.Value.ToString("dd/MM/yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success"> (en cours)</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @* ===== TAB CALENDRIER ===== *@
+        @if (ActiveTab == "calendrier")
+        {
+            <div class="calendrier-container">
+                <div class="calendrier-header">
+                    <h3>📅 Feuilles de temps - @EmployeAffiche.Prenom @EmployeAffiche.Nom</h3>
+
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label>Semaine :</label>
+                            <input type="number" class="form-control" min="1" max="53"
+                                   @bind="NumSemaine" @bind:after="LoadCalendrierData" />
+                        </div>
+                        <div class="control-group">
+                            <label>Année :</label>
+                            <input type="number" class="form-control"
+                                   @bind="Annee" @bind:after="LoadCalendrierData" />
+                        </div>
+                        <button class="btn btn-primary" @onclick="GoToCurrentWeek">
+                            Semaine actuelle
+                        </button>
+                    </div>
+
+                    <div class="periode-display">
+                        Du @StartOfWeek.ToString("dd/MM/yyyy") au @EndOfWeek.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+
+                @if (IsLoadingCalendrier)
+                {
+                    <div class="text-center my-5">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                }
+                else
+                {
+                    <div class="calendar-grid">
+                        <div class="calendar-header-cell corner-cell"></div>
+                        @foreach (var jour in JoursSemaine)
+                        {
+                            <div class="calendar-header-cell day-header">
+                                <div class="day-name">@jour.Nom</div>
+                                <div class="day-date">@jour.Date.ToString("dd/MM")</div>
+                            </div>
+                        }
+
+                        <div class="calendar-row-header">Matin</div>
+                        @foreach (var jour in JoursSemaine)
+                        {
+                            @RenderCell(jour.Date, true)
+                        }
+
+                        <div class="calendar-row-header">Après-midi</div>
+                        @foreach (var jour in JoursSemaine)
+                        {
+                            @RenderCell(jour.Date, false)
+                        }
+                    </div>
+                }
+            </div>
+
+            @* Modal pour ajouter/modifier une feuille de temps *@
+            @if (ShowModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    @(EditingFeuille == null ? "Ajouter" : "Modifier") une feuille de temps
+                                </h5>
+                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" @bind="ModalDate" disabled />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Période</label>
+                                    <input type="text" class="form-control"
+                                           value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Sur quel projet avez-vous travaillé ?</strong></label>
+                                    <InputSelect class="form-select" @bind-Value="ModalProjetId">
+                                        <option value="">-- Sélectionner un projet --</option>
+                                        @foreach (var projet in Projets)
+                                        {
+                                            <option value="@projet.Id">@projet.Nom</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Qu'avez-vous fait ?</strong></label>
+                                    <textarea class="form-control" rows="5" @bind="ModalCommentaire"
+                                              placeholder="Décrivez ce que vous avez réalisé pendant cette demi-journée..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                @if (EditingFeuille != null && IsOwnProfile)
+                                {
+                                    <button type="button" class="btn btn-danger me-auto" @onclick="DeleteFeuille">Supprimer</button>
+                                }
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
+                                @if (IsOwnProfile)
+                                {
+                                    <button type="button" class="btn btn-primary" @onclick="SaveFeuille">Enregistrer</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        @* ===== TAB PROJETS ===== *@
+        @if (ActiveTab == "projets")
+        {
+            <div class="projets-list">
+                @if (!Projets.Any())
+                {
+                    <div class="alert alert-info">
+                        Aucun projet pour cet employé.
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        @foreach (var projet in Projets)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="projet-card">
+                                    <div class="projet-header">
+                                        <h5>@projet.Nom</h5>
+                                        <span class="badge bg-@GetPriorityBadge(projet.Priorite)">
+                                            @projet.Priorite
+                                        </span>
+                                    </div>
+                                    <p class="text-muted small mb-2">@projet.Description</p>
+                                    <div class="projet-meta">
+                                        <span><i class="bi bi-calendar"></i> @projet.DateDebut.ToString("dd/MM/yyyy")</span>
+                                        @if (projet.DateFin.HasValue)
+                                        {
+                                            <span><i class="bi bi-calendar-check"></i> @projet.DateFin.Value.ToString("dd/MM/yyyy")</span>
+                                        }
+                                    </div>
+                                    <div class="projet-footer">
+                                        <small class="text-muted">@projet.TypeProjetNom</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int? EmployeIdParam { get; set; }
+
+    private ClaimsPrincipal _user;
+    private int EmployeConnecteId;
+    private string EmployeConnecteNom = "";
+    private bool IsChefDeProjet = false;
+    private bool IsOwnProfile => EmployeIdAffiche == EmployeConnecteId;
+
+    private int EmployeIdAffiche;
+    private EmployeDTO? EmployeAffiche;
+    private List<ProjetDTO> Projets = new List<ProjetDTO>();
+
+    private string ActiveTab = "infos";
+    private string? ErrorMessage;
+    private bool IsLoading = true;
+
+    // Calendrier
+    private List<FeuilleTempsDTO> FeuillesTemps = new();
+    private int NumSemaine;
+    private int Annee;
+    private bool IsLoadingCalendrier = false;
+    private DateTime StartOfWeek;
+    private DateTime EndOfWeek;
+    private List<JourSemaine> JoursSemaine = new();
+
+    // Modal
+    private bool ShowModal = false;
+    private FeuilleTempsDTO? EditingFeuille;
+    private DateTime ModalDate;
+    private bool ModalEstMatin;
+    private int? ModalProjetId;
+    private string? ModalCommentaire;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+
+        if (_user.Identity != null && _user.Identity.IsAuthenticated)
+        {
+            var userIdString = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdString, out int userId))
+            {
+                EmployeConnecteId = userId;
+                var prenom = _user.FindFirst("prenom")?.Value ?? "";
+                var nom = _user.FindFirst("nom")?.Value ?? "";
+                EmployeConnecteNom = $"{prenom} {nom}";
+                IsChefDeProjet = _user.IsInRole("Chef de projet");
+            }
+        }
+
+        EmployeIdAffiche = EmployeIdParam ?? EmployeConnecteId;
+
+        if (!IsOwnProfile && !IsChefDeProjet)
+        {
+            ErrorMessage = "Vous n'avez pas les droits pour consulter ce profil.";
+            IsLoading = false;
+            return;
+        }
+
+        await LoadEmployeData();
+        await LoadProjets();
+
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+
+        IsLoading = false;
+    }
+
+    private async Task LoadEmployeData()
+    {
+        try
+        {
+            EmployeAffiche = await EmployeService.GetByID(EmployeIdAffiche);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors du chargement du profil : {ex.Message}";
+        }
+    }
+
+    private async Task LoadProjets()
+    {
+        try
+        {
+            Projets = await ProjetService.GetProjetsByEmployeId(EmployeConnecteId);        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors du chargement des projets : {ex.Message}";
+        }
+    }
+
+    // ========== CALENDRIER ==========
+    private async Task InitCalendrier()
+    {
+        IsLoadingCalendrier = true;
+        await LoadCalendrierData();
+        IsLoadingCalendrier = false;
+    }
+
+    private async Task LoadCalendrierData()
+    {
+        IsLoadingCalendrier = true;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            FeuillesTemps = await FeuilleTempsService.GetBySemaine(
+                EmployeIdAffiche,
+                NumSemaine,
+                Annee,
+                null 
+            );
+
+            CalculateDates();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur chargement calendrier : {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingCalendrier = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CalculateDates()
+    {
+        var jan4 = new DateTime(Annee, 1, 4);
+        int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
+        var firstMonday = jan4.AddDays(-daysOffset);
+
+        StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
+        EndOfWeek = StartOfWeek.AddDays(4);
+
+        JoursSemaine = new List<JourSemaine>
+        {
+            new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
+            new JourSemaine { Nom = "Mardi", Date = StartOfWeek.AddDays(1) },
+            new JourSemaine { Nom = "Mercredi", Date = StartOfWeek.AddDays(2) },
+            new JourSemaine { Nom = "Jeudi", Date = StartOfWeek.AddDays(3) },
+            new JourSemaine { Nom = "Vendredi", Date = StartOfWeek.AddDays(4) }
+        };
+    }
+
+    private async Task GoToCurrentWeek()
+    {
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+        await LoadCalendrierData();
+    }
+
+    private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
+    {
+        var feuille = FeuillesTemps.FirstOrDefault(f =>
+            f.Date.Date == date.Date && f.EstMatin == estMatin);
+
+        bool isEditable = IsOwnProfile;
+        var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
+
+        if (!isEditable)
+        {
+            cellClass += " read-only";
+        }
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", cellClass);
+
+        if (isEditable)
+        {
+            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
+        }
+
+        if (feuille != null)
+        {
+            builder.OpenElement(3, "div");
+            builder.AddAttribute(4, "class", "cell-content");
+
+            builder.OpenElement(5, "div");
+            builder.AddAttribute(6, "class", "presence-indicator");
+            builder.AddContent(7, "✓ Présent");
+            builder.CloseElement();
+
+            if (!string.IsNullOrEmpty(feuille.ProjetNom))
+            {
+                builder.OpenElement(8, "div");
+                builder.AddAttribute(9, "class", "projet-badge");
+                builder.AddContent(10, feuille.ProjetNom);
+                builder.CloseElement();
+            }
+
+            if (!string.IsNullOrEmpty(feuille.Commentaire))
+            {
+                builder.OpenElement(11, "div");
+                builder.AddAttribute(12, "class", "commentaire");
+                builder.AddContent(13, TruncateText(feuille.Commentaire, 50));
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        }
+        else
+        {
+            if (isEditable)
+            {
+                builder.OpenElement(14, "div");
+                builder.AddAttribute(15, "class", "cell-empty-text");
+                builder.AddContent(16, "+ Ajouter");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(17, "div");
+                builder.AddAttribute(18, "class", "cell-empty-text");
+                builder.AddContent(19, "—");
+                builder.CloseElement();
+            }
+        }
+
+        builder.CloseElement();
+    };
+
+    private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
+    {
+        if (!IsOwnProfile)
+            return;
+
+        EditingFeuille = feuille;
+        ModalDate = date;
+        ModalEstMatin = estMatin;
+        ModalProjetId = feuille?.ProjetId;
+        ModalCommentaire = feuille?.Commentaire;
+        ShowModal = true;
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        EditingFeuille = null;
+        ModalProjetId = null;
+        ModalCommentaire = null;
+    }
+
+    private async Task SaveFeuille()
+    {
+        ErrorMessage = null;
+
+        try
+        {
+            if (EditingFeuille != null)
+            {
+                var updateDto = new FeuilleTempsUpdateDTO
+                {
+                    Id = EditingFeuille.Id,
+                    Commentaire = ModalCommentaire,
+                    TacheId = null, 
+                    ProjetId = ModalProjetId
+                };
+                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
+            }
+            else
+            {
+                var createDto = new FeuilleTempsCreateDTO
+                {
+                    Date = ModalDate,
+                    EstMatin = ModalEstMatin,
+                    ProjetId = ModalProjetId,
+                    TacheId = null, 
+                    Commentaire = ModalCommentaire
+                };
+                await FeuilleTempsService.Post(createDto);
+            }
+
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de l'enregistrement : {ex.Message}";
+        }
+    }
+
+    private async Task DeleteFeuille()
+    {
+        if (EditingFeuille == null) return;
+
+        ErrorMessage = null;
+
+        try
+        {
+            await FeuilleTempsService.Delete(EditingFeuille.Id);
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la suppression : {ex.Message}";
+        }
+    }
+
+    // ========== HELPERS ==========
+    private string MaskSecuriteSociale(string numero)
+    {
+        if (IsOwnProfile || IsChefDeProjet)
+            return numero;
+
+        return numero.Length > 4 ? "XXX XXX XXX " + numero.Substring(numero.Length - 4) : "XXXX";
+    }
+
+    private string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+
+        return text.Substring(0, maxLength) + "...";
+    }
+
+    private string GetPriorityBadge(NiveauPriorite priorite)
+    {
+        return priorite switch
+        {
+            NiveauPriorite.Basse => "success",
+            NiveauPriorite.Normale => "info",
+            NiveauPriorite.Haute => "warning",
+            NiveauPriorite.Urgente => "danger",
+            _ => "secondary"
+        };
+    }
+
+    public void Dispose()
+    {
+        EntiteState.OnChange -= null;
+    }
+
+    private class JourSemaine
+    {
+        public string Nom { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+}

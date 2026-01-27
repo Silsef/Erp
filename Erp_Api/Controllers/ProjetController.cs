@@ -51,6 +51,14 @@ namespace Erp_Api.Controllers
 
             return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
         }
+        [HttpGet("{employeId}")]
+        public async Task<ActionResult<IEnumerable<ProjetDTO>>> GetProjetsByEmployeId(int employeId)
+        {
+            var projets = await projetmanager.GetProjetsByEmployeId(employeId);
+
+            return Ok(_mapper.Map<IEnumerable<ProjetDTO>>(projets));
+        }
+
 
     }
 }

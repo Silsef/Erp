@@ -21,5 +21,12 @@ namespace Erp_Blazor.Service.WebServices
             var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsExternesByEntiteId/{entiteId}");
             return resultat ?? new List<ProjetDTO>();
         }
+        
+            public async Task<List<ProjetDTO>> GetProjetsByEmployeId(int employeid)
+        {
+            var resultat = await _client.GetFromJsonAsync<List<ProjetDTO>>($"{_endpoint}/GetProjetsByEmployeId/{employeid}");
+            return resultat ?? new List<ProjetDTO>();
+        }
+
     }
 }

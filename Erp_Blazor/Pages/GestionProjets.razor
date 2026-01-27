@@ -695,7 +695,6 @@
     {
         EntiteState.OnChange += HandleEntiteChanged;
 
-        // Récupérer les infos de l'utilisateur connecté
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _user = authState.User;
 
