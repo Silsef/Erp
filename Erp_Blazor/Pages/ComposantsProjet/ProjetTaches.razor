@@ -1,0 +1,325 @@
+﻿@using Shared_Erp.Tache
+@using Shared_Erp.Employe
+@using Shared_Erp.Projet
+@using Shared_Erp.Enums
+@using Erp_Blazor.Service.States
+@inject ITacheService TacheService
+@inject IEmployeService EmployeService
+@inject EntiteState EntiteState
+
+@if (SelectedTache != null)
+{
+    @* Vue Détail d'une tâche *@
+    <div class="animate fade-in">
+        <div class="d-flex align-items-center mb-4">
+            <button class="btn btn-outline-secondary btn-sm me-3" @onclick="() => SelectedTache = null">
+                <i class="bi bi-arrow-left"></i> Retour
+            </button>
+            <h3 class="m-0">@SelectedTache.Nom</h3>
+            <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(SelectedTache.Priorite)">
+                @SelectedTache.Priorite
+            </span>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <h5 class="text-muted mb-3">Description</h5>
+                        <p>@(string.IsNullOrEmpty(SelectedTache.Description) ? "Aucune description" : SelectedTache.Description)</p>
+                    </div>
+                    <div class="col-md-4 border-start">
+                        <h5 class="text-muted mb-3">Informations</h5>
+                        <div class="mb-2">
+                            <i class="bi bi-person-circle me-2 text-primary"></i>
+                            <strong>Assigné à :</strong>
+                            <span class="d-block ms-4">@(SelectedTache.EmployeAssigneNom ?? "Non assigné")</span>
+                        </div>
+                        <div class="mb-2">
+                            <i class="bi bi-calendar-event me-2 text-primary"></i>
+                            <strong>Dates :</strong>
+                            <span class="d-block ms-4">
+                                du @SelectedTache.DateDebut.ToShortDateString()
+                                @if (SelectedTache.DateFin.HasValue)
+                                {
+                                    <span> au @SelectedTache.DateFin.Value.ToShortDateString()</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <i class="bi bi-flag me-2 text-primary"></i>
+                            <strong>Statut :</strong>
+                            <span class="d-block ms-4">@SelectedTache.Statut.ToString().Replace("_", " ")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @* Vue Arborescence *@
+    <div class="animate fade-in mt-3">
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary btn-sm" @onclick="() => CreateNewTache()">
+                <i class="bi bi-plus-lg"></i> Nouvelle Tâche Racine
+            </button>
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        }
+        else
+        {
+            <div class="task-tree-container">
+                @foreach (var tache in Taches.Where(t => t.TacheParenteId == null))
+                {
+                    @TaskTree(tache)
+                }
+
+                @if (!Taches.Any())
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-clipboard-x fs-1"></i>
+                        <p class="mt-2">Aucune tâche pour ce projet.</p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@* --- MODAL DE CRÉATION DE TACHE --- *@
+@if (showcreateTacheModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <EditForm Model="@NewTache" OnValidSubmit="SaveNewTache">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            @(NewTache.TacheParenteId.HasValue ? "Créer une sous-tâche" : "Créer une nouvelle Tâche")
+                        </h5>
+                        <button type="button" class="btn-close" @onclick="() => showcreateTacheModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nom de la tache *</label>
+                            <InputText class="form-control" @bind-Value="NewTache.Nom" placeholder="Nom de la tâche" />
+                            <ValidationMessage For="@(() => NewTache.Nom)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="NewTache.Description" placeholder="Détails..." />
+                            <ValidationMessage For="@(() => NewTache.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date de début *</label>
+                                <InputDate class="form-control" @bind-Value="NewTache.DateDebut" />
+                                <ValidationMessage For="@(() => NewTache.DateDebut)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priorité</label>
+                                <InputSelect class="form-select" @bind-Value="NewTache.Priorite">
+                                    @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
+                                    {
+                                        <option value="@niveau">@niveau</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Employé assigné</label>
+                            @if (IsChefDeProjet)
+                            {
+                                <InputSelect class="form-select" @bind-Value="NewTache.EmployeAssigneId">
+                                    <option value="">-- Sélectionner un employé --</option>
+                                    @foreach (var emp in EmployesList)
+                                    {
+                                        <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
+                                    }
+                                </InputSelect>
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control" value="@EmployeConnecteNom (vous)" disabled />
+                                <small class="form-text text-muted">Seul un chef de projet peut assigner une tâche à quelqu'un d'autre</small>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tache Parente</label>
+                            <InputSelect class="form-select" @bind-Value="NewTache.TacheParenteId">
+                                <option value="">(Aucune - Tâche racine)</option>
+                                @foreach (var tac in Taches)
+                                {
+                                    <option value="@tac.Id">@tac.Nom</option>
+                                }
+                            </InputSelect>
+                            <div class="form-text">Vous pouvez modifier la tâche parente ici si besoin.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showcreateTacheModal = false">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Créer Tache</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ProjetDTO SelectedProjet { get; set; } = null!;
+    [Parameter] public bool IsChefDeProjet { get; set; }
+    [Parameter] public int EmployeConnecteId { get; set; }
+    [Parameter] public string EmployeConnecteNom { get; set; } = "";
+    [Parameter] public TacheDTO? PreSelectedTache { get; set; }
+    [Parameter] public EventCallback OnTacheSelectedHandled { get; set; }
+
+    private List<TacheDTO> Taches = new List<TacheDTO>();
+    private TacheDTO? SelectedTache;
+    private bool IsLoading = false;
+    private string? ErrorMessage;
+
+    // Modal vars
+    private bool showcreateTacheModal = false;
+    private TacheCreateDTO NewTache = new TacheCreateDTO();
+    private List<EmployeDTO> EmployesList = new List<EmployeDTO>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SelectedProjet != null)
+        {
+            // On recharge si la liste est vide ou si le projet a changé (on pourrait optimiser ici)
+            // Pour simplifier, on recharge pour être sûr d'être à jour
+            await LoadTaches();
+        }
+
+        // Si on vient de l'onglet participants
+        if (PreSelectedTache != null)
+        {
+            SelectedTache = PreSelectedTache;
+            // On notifie le parent qu'on a traité la sélection pour ne pas re-loop
+            await OnTacheSelectedHandled.InvokeAsync();
+        }
+    }
+
+    private async Task LoadTaches()
+    {
+        IsLoading = true;
+        try
+        {
+            Taches = await TacheService.GetTachesByProjetId(SelectedProjet.Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur chargement tâches : {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private string GetPriorityColor(NiveauPriorite p) => p.ToString();
+
+    private void SelectTache(TacheDTO t) => SelectedTache = t;
+
+    private async Task CreateNewTache(int? parentId = null)
+    {
+        ErrorMessage = null;
+        int? idvide = null;
+        // On récupère les employés pour le select
+        EmployesList = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId, idvide);
+
+        NewTache = new TacheCreateDTO
+        {
+            DateDebut = DateTime.Now,
+            Priorite = NiveauPriorite.Normale,
+            TacheParenteId = parentId,
+            ProjetId = SelectedProjet.Id
+        };
+        showcreateTacheModal = true;
+    }
+
+    private async Task SaveNewTache()
+    {
+        if (!IsChefDeProjet || NewTache.EmployeAssigneId == null)
+        {
+            NewTache.EmployeAssigneId = EmployeConnecteId;
+        }
+
+        // Sécurité redondante si le formulaire ne l'a pas mis
+        NewTache.ProjetId = SelectedProjet.Id;
+
+        try
+        {
+            var createdTache = await TacheService.Post(NewTache);
+            Taches.Add(createdTache); // Ajout local pour fluidité
+            showcreateTacheModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur création tâche : {ex.Message}");
+        }
+    }
+
+    // RenderFragment Récursif pour l'arborescence
+    private RenderFragment<TacheDTO> TaskTree => tache => __builder =>
+    {
+        <div class="task-node mb-2">
+            <div class="task-card d-flex justify-content-between align-items-center p-3 border rounded shadow-sm priority-@GetPriorityColor(tache.Priorite)" style="background-color: white;">
+                <div class="d-flex align-items-center" style="cursor: pointer; flex-grow: 1;" @onclick="() => SelectTache(tache)">
+                    <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(tache.Priorite)">
+                        @tache.Priorite
+                    </span>
+                    <span class="fw-bold leftmargin">@tache.Nom</span>
+                    <small class="text-muted ms-3">
+                        <i class="bi bi-person-circle"></i>
+                        @if (IsChefDeProjet && tache.EmployeAssigneId.HasValue)
+                        {
+                            <span class="fw-bold">@tache.EmployeAssigneNom</span>
+                        }
+                        else
+                        {
+                            @(tache.EmployeAssigneNom ?? "Non assigné")
+                        }
+                    </small>
+                    <span class="badge bg-info ms-2">@tache.Statut.ToString().Replace("_", " ")</span>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-outline-primary btn-sm rounded-circle"
+                            title="Ajouter une sous-tâche"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => CreateNewTache(tache.Id)">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            @{
+                var enfants = Taches.Where(t => t.TacheParenteId == tache.Id).ToList();
+            }
+            @if (enfants.Any())
+            {
+                <div class="task-children ps-4 mt-2 border-start ms-3">
+                    @foreach (var enfant in enfants)
+                    {
+                        @TaskTree(enfant)
+                    }
+                </div>
+            }
+        </div>
+    };
+}

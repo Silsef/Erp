@@ -2,26 +2,24 @@
 @using Erp_Blazor.Service.States
 @using Shared_Erp.Entite
 @using Shared_Erp.Enums
+@using Shared_Erp.Projet
+@using Shared_Erp.Employe
 @using Shared_Erp.Tache
 @using Shared_Erp.Adresse
-@using Shared_Erp.Employe
-@using Shared_Erp.FeuilleTemps
-@using System.Globalization
-@using Microsoft.AspNetCore.Components.Forms
-@inject IProjetService ProjetService
-@inject ITypeProjetService TypeProjetService
-@inject IEntiteService EntiteService
-@inject IFeuilleTempsService FeuilleTempsService
-@inject IEmployeService EmployeService
-@inject ITacheService TacheService
-@attribute [Authorize]
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using Shared_Erp.TypeProjet
+@using Erp_Blazor.Pages.ComposantsProjet
+
+@inject IProjetService ProjetService
+@inject ITypeProjetService TypeProjetService
+@inject IEntiteService EntiteService
 @inject AuthenticationStateProvider AuthStateProvider
-@implements IDisposable
 @inject EntiteState EntiteState
 @inject NavigationManager NavManager
+
+@attribute [Authorize]
+@implements IDisposable
 
 <h3>Gestion des Projets</h3>
 
@@ -34,12 +32,11 @@
 }
 
 <div class="layout-container">
-
     @* --- SIDEBAR LISTE PROJETS --- *@
     <div class="project-list-sidebar">
         <h5 class="text-center mb-3">Mes Projets</h5>
 
-        @if (Projetsexternes == null && Projetsinternes == null)
+        @if (Projetsinternes == null && Projetsexternes == null)
         {
             <p class="text-center">Chargement...</p>
         }
@@ -87,371 +84,50 @@
             <ul class="nav nav-tabs project-tabs">
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "overview" ? "active" : "")"
-                       @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
-                        Overview
-                    </a>
+                       @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">Overview</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "taches" ? "active" : "")"
-                       @onclick='() => ActiveTab = "taches"' style="cursor: pointer;">
-                        Tâches
-                    </a>
+                       @onclick='() => ActiveTab = "taches"' style="cursor: pointer;">Tâches</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "calendrier" ? "active" : "")"
-                       @onclick='() => { ActiveTab = "calendrier"; InitCalendrier(); }' style="cursor: pointer;">
-                        Calendrier
-                    </a>
+                       @onclick='() => ActiveTab = "calendrier"' style="cursor: pointer;">Calendrier</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "participants" ? "active" : "")"
-                       @onclick='() => {ActiveTab = "participants"; LoadParticipants(); } ' style="cursor: pointer;">
-                        Participants
-                    </a>
+                       @onclick='() => ActiveTab = "participants"' style="cursor: pointer;">Participants</a>
                 </li>
             </ul>
 
             <div class="tab-content mt-3">
-
-                @* --- TAB OVERVIEW --- *@
                 @if (ActiveTab == "overview")
                 {
-                    <div class="animate fade-in">
-                        <h4>Informations Générales</h4>
-                        <p><strong>Description :</strong> @SelectedProjet.Description</p>
-                        <p><strong>Type :</strong> @SelectedProjet.TypeProjetNom</p>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Début :</strong> @SelectedProjet.DateDebut.ToShortDateString()</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Fin :</strong> @(SelectedProjet.DateFin?.ToShortDateString() ?? "En cours")</p>
-                            </div>
-                        </div>
-                    </div>
+                    <ProjetOverview SelectedProjet="@SelectedProjet" />
                 }
-
-                @* --- TAB TACHES (ARBORESCENCE) --- *@
+                
                 @if (ActiveTab == "taches")
                 {
-                    @if (SelectedTache != null)
-                    {
-                        <div class="animate fade-in">
-                            <div class="d-flex align-items-center mb-4">
-                                <button class="btn btn-outline-secondary btn-sm me-3" @onclick="() => SelectedTache = null">
-                                    <i class="bi bi-arrow-left"></i> Retour
-                                </button>
-                                <h3 class="m-0">@SelectedTache.Nom</h3>
-                                <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(SelectedTache.Priorite)">
-                                    @SelectedTache.Priorite
-                                </span>
-                            </div>
-
-                            <div class="card shadow-sm border-0">
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-8">
-                                            <h5 class="text-muted mb-3">Description</h5>
-                                            <p>@(string.IsNullOrEmpty(SelectedTache.Description) ? "Aucune description" : SelectedTache.Description)</p>
-                                        </div>
-                                        <div class="col-md-4 border-start">
-                                            <h5 class="text-muted mb-3">Informations</h5>
-                                            <div class="mb-2">
-                                                <i class="bi bi-person-circle me-2 text-primary"></i>
-                                                <strong>Assigné à :</strong>
-                                                <span class="d-block ms-4">@(SelectedTache.EmployeAssigneNom ?? "Non assigné")</span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <i class="bi bi-calendar-event me-2 text-primary"></i>
-                                                <strong>Dates :</strong>
-                                                <span class="d-block ms-4">
-                                                    du @SelectedTache.DateDebut.ToShortDateString()
-                                                    @if (SelectedTache.DateFin.HasValue)
-                                                    {
-                                                        <span> au @SelectedTache.DateFin.Value.ToShortDateString()</span>
-                                                    }
-                                                </span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <i class="bi bi-flag me-2 text-primary"></i>
-                                                <strong>Statut :</strong>
-                                                <span class="d-block ms-4">@SelectedTache.Statut.ToString().Replace("_", " ")</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="animate fade-in mt-3">
-                            <div class="d-flex justify-content-end mb-3">
-                                <button class="btn btn-primary btn-sm" @onclick="() => CreateNewTache()">
-                                    <i class="bi bi-plus-lg"></i> Nouvelle Tâche Racine
-                                </button>
-                            </div>
-
-                            <div class="task-tree-container">
-                                @foreach (var tache in Taches.Where(t => t.TacheParenteId == null))
-                                {
-                                    @TaskTree(tache)
-                                }
-
-                                @if (!Taches.Any())
-                                {
-                                    <div class="text-center text-muted py-5">
-                                        <i class="bi bi-clipboard-x fs-1"></i>
-                                        <p class="mt-2">Aucune tâche pour ce projet.</p>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
+                    <ProjetTaches SelectedProjet="@SelectedProjet"
+                                  IsChefDeProjet="@IsChefDeProjet"
+                                  EmployeConnecteId="@EmployeConnecteId"
+                                  EmployeConnecteNom="@EmployeConnecteNom"
+                                  PreSelectedTache="@TacheToSelectFromParticipants"
+                                  OnTacheSelectedHandled="() => TacheToSelectFromParticipants = null" />
                 }
 
-                @* --- TAB CALENDRIER --- *@
                 @if (ActiveTab == "calendrier")
                 {
-                    <div class="calendrier-container">
-                        <div class="calendrier-header">
-                            <h3>📅 Feuilles de temps - @SelectedProjet.Nom</h3>
-
-                            <div class="controls-row">
-                                @* Sélection de l'employé (uniquement pour les chefs de projet) *@
-                                @if (IsChefDeProjet)
-                                {
-                                    <div class="control-group">
-                                        <label>Employé :</label>
-                                        <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
-                                            @foreach (var emp in Employes)
-                                            {
-                                                <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
-                                            }
-                                        </select>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="control-group">
-                                        <label>Employé :</label>
-                                        <input type="text" class="form-control" value="@EmployeConnecteNom" disabled />
-                                    </div>
-                                }
-
-                                <div class="control-group">
-                                    <label>Semaine :</label>
-                                    <input type="number" class="form-control" min="1" max="53"
-                                           @bind="NumSemaine" @bind:after="LoadCalendrierData" />
-                                </div>
-                                <div class="control-group">
-                                    <label>Année :</label>
-                                    <input type="number" class="form-control"
-                                           @bind="Annee" @bind:after="LoadCalendrierData" />
-                                </div>
-                                <button class="btn btn-primary" @onclick="GoToCurrentWeek">
-                                    Semaine actuelle
-                                </button>
-                            </div>
-
-                            <div class="periode-display">
-                                Du @StartOfWeek.ToString("dd/MM/yyyy") au @EndOfWeek.ToString("dd/MM/yyyy")
-                            </div>
-                        </div>
-
-                        @if (IsLoadingCalendrier)
-                        {
-                            <div class="text-center my-5">
-                                <div class="spinner-border text-primary"></div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="calendar-grid">
-                                <div class="calendar-header-cell corner-cell"></div>
-                                @foreach (var jour in JoursSemaine)
-                                {
-                                    <div class="calendar-header-cell day-header">
-                                        <div class="day-name">@jour.Nom</div>
-                                        <div class="day-date">@jour.Date.ToString("dd/MM")</div>
-                                    </div>
-                                }
-
-                                <div class="calendar-row-header">Matin</div>
-                                @foreach (var jour in JoursSemaine)
-                                {
-                                    @RenderCell(jour.Date, true)
-                                }
-
-                                <div class="calendar-row-header">Après-midi</div>
-                                @foreach (var jour in JoursSemaine)
-                                {
-                                    @RenderCell(jour.Date, false)
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    @if (ShowModal)
-                    {
-                        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">
-                                            @(EditingFeuille == null ? "Ajouter" : "Modifier") une feuille de temps
-                                        </h5>
-                                        <button type="button" class="btn-close" @onclick="CloseModal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Date</label>
-                                            <input type="date" class="form-control" @bind="ModalDate" disabled />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Période</label>
-                                            <input type="text" class="form-control"
-                                                   value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Sur quelle tache avez vous travaillé ?</label>
-                                            <div class="d-flex gap-2">
-                                                <InputSelect class="form-select" @bind-Value="idtache">
-                                                    <option value="">-- Sélectionner une tache --</option>
-                                                    @foreach (var ta in Taches)
-                                                    {
-                                                        <option value="@ta.Id">@ta.Nom</option>
-                                                    }
-                                                </InputSelect>
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Qu'avez-vous fait ?</strong></label>
-                                            <textarea class="form-control" rows="5" @bind="ModalCommentaire"
-                                                      placeholder="Décrivez ce que vous avez réalisé pendant cette demi-journée..."></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        @if (EditingFeuille != null && !IsChefDeProjet)
-                                        {
-                                            <button type="button" class="btn btn-danger me-auto" @onclick="DeleteFeuille">Supprimer</button>
-                                        }
-                                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
-                                        <button type="button" class="btn btn-primary" @onclick="SaveFeuille">Enregistrer</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    <ProjetCalendrier SelectedProjet="@SelectedProjet"
+                                      IsChefDeProjet="@IsChefDeProjet"
+                                      EmployeConnecteId="@EmployeConnecteId"
+                                      EmployeConnecteNom="@EmployeConnecteNom" />
                 }
-
 
                 @if (ActiveTab == "participants")
                 {
-                    <div class="animate fade-in mt-3">
-                        <div class="row">
-                            @* Boucle sur chaque employé *@
-                            @foreach (var emp in Employes)
-                            {
-                                // Récupération des tâches de l'employé pour ce projet
-                                var tasks = Taches.Where(t => t.EmployeAssigneId == emp.Id).OrderBy(t => t.DateDebut).ToList();
-
-                                <div class="col-md-6 col-lg-4 mb-4">
-                                    <div class="card h-100 shadow-sm">
-                                        <div class="card-header bg-white d-flex align-items-center py-3">
-                                            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
-                                                <span class="fw-bold">@emp.Prenom[0]@emp.Nom[0]</span>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">@emp.Prenom @emp.Nom</h6>
-                                                <small class="text-muted">@tasks.Count tâche(s)</small>
-                                            </div>
-                                        </div>
-
-                                        <div class="list-group list-group-flush flex-grow-1">
-                                            @if (tasks.Any())
-                                            {
-                                                @foreach (var task in tasks)
-                                                {
-                                                    <button type="button"
-                                                            class="list-group-item list-group-item-action border-0 border-bottom py-3" @onclick='() => { SelectTache(task); ActiveTab = "taches"; }'>
-                                                        <div class="d-flex w-100 justify-content-between align-items-start mb-1">
-                                                            <span class="fw-semibold text-truncate me-2" style="max-width: 70%;">@task.Nom</span>
-                                                            <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
-                                                                @task.Priorite
-                                                            </span>
-                                                        </div>
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <small class="text-muted">
-                                                                <i class="bi bi-calendar2-week me-1"></i>
-                                                                @task.DateDebut.ToString("dd/MM")
-                                                                @if (task.DateFin.HasValue)
-                                                                {
-                                                                    <span>- @task.DateFin.Value.ToString("dd/MM")</span>
-                                                                }
-                                                            </small>
-
-                                                            @if (task.Statut == Statut.Termine)
-                                                            {
-                                                                <i class="bi bi-check-circle-fill text-success" title="Terminé"></i>
-                                                            }
-                                                            else if (task.Statut==Statut.En_Cours && task.DateFin.HasValue && task.DateFin < DateTime.Now)
-                                                            {
-                                                                <i class="bi bi-exclamation-triangle-fill text-danger" title="En retard"></i>
-                                                            }
-                                                            else
-                                                            {
-                                                                <i class="bi bi-hourglass-split text-secondary" title="@task.Statut.ToString().Replace("_"," ")"></i>
-                                                            }
-                                                        </div>
-                                                    </button>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4">
-                                                    <i class="bi bi-clipboard fs-1 mb-2 opacity-50"></i>
-                                                    <small>Aucune tâche assignée</small>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-
-                            @{
-                                var unassigned = Taches.Where(t => t.EmployeAssigneId == null).ToList();
-                            }
-                            @if (unassigned.Any())
-                            {
-                                <div class="col-md-6 col-lg-4 mb-4">
-                                    <div class="card h-100 border-warning shadow-sm">
-                                        <div class="card-header bg-warning bg-opacity-10 text-dark d-flex align-items-center py-3">
-                                            <i class="bi bi-question-circle-fill text-warning fs-4 me-3"></i>
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">Non assignées</h6>
-                                                <small class="text-muted">@unassigned.Count tâche(s)</small>
-                                            </div>
-                                        </div>
-                                        <div class="list-group list-group-flush">
-                                            @foreach (var task in unassigned)
-                                            {
-                                                <button type="button" class="list-group-item list-group-item-action border-0 border-bottom py-3" @onclick="() => SelectTache(task)">
-                                                    <div class="d-flex w-100 justify-content-between">
-                                                        <span class="fw-semibold">@task.Nom</span>
-                                                        <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
-                                                            @task.Priorite
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
+                    <ProjetParticipants SelectedProjet="@SelectedProjet"
+                                        OnRequestSelectTache="HandleRequestSelectTache" />
                 }
             </div>
         }
@@ -531,92 +207,6 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showcreateProjetModal = false">Annuler</button>
                         <button type="submit" class="btn btn-primary">Créer Projet</button>
-                    </div>
-                </EditForm>
-            </div>
-        </div>
-    </div>
-}
-
-@* --- MODAL DE CRÉATION DE TACHE --- *@
-@if (showcreateTacheModal)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <EditForm Model="@NewTache" OnValidSubmit="SaveNewTache">
-                    <DataAnnotationsValidator />
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            @(NewTache.TacheParenteId.HasValue ? "Créer une sous-tâche" : "Créer une nouvelle Tâche")
-                        </h5>
-                        <button type="button" class="btn-close" @onclick="() => showcreateTacheModal = false"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nom de la tache *</label>
-                            <InputText class="form-control" @bind-Value="NewTache.Nom" placeholder="Nom de la tâche" />
-                            <ValidationMessage For="@(() => NewTache.Nom)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <InputTextArea class="form-control" rows="3" @bind-Value="NewTache.Description" placeholder="Détails..." />
-                            <ValidationMessage For="@(() => NewTache.Description)" />
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Date de début *</label>
-                                <InputDate class="form-control" @bind-Value="NewTache.DateDebut" />
-                                <ValidationMessage For="@(() => NewTache.DateDebut)" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Priorité</label>
-                                <InputSelect class="form-select" @bind-Value="NewTache.Priorite">
-                                    @foreach (var niveau in Enum.GetValues(typeof(NiveauPriorite)))
-                                    {
-                                        <option value="@niveau">@niveau</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Employé assigné</label>
-                            @if (IsChefDeProjet)
-                            {
-                                <InputSelect class="form-select" @bind-Value="NewTache.EmployeAssigneId">
-                                    <option value="">-- Sélectionner un employé --</option>
-                                    @foreach (var emp in Employes)
-                                    {
-                                        <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
-                                    }
-                                </InputSelect>
-                            }
-                            else
-                            {
-                                <input type="text" class="form-control" value="@EmployeConnecteNom (vous)" disabled />
-                                <small class="form-text text-muted">Seul un chef de projet peut assigner une tâche à quelqu'un d'autre</small>
-                            }
-                        </div>
-
-
-                        <div class="mb-3">
-                            <label class="form-label">Tache Parente</label>
-                            <InputSelect class="form-select" @bind-Value="NewTache.TacheParenteId">
-                                <option value="">(Aucune - Tâche racine)</option>
-                                @foreach (var tac in Taches)
-                                {
-                                    <option value="@tac.Id">@tac.Nom</option>
-                                }
-                            </InputSelect>
-                            <div class="form-text">Vous pouvez modifier la tâche parente ici si besoin.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showcreateTacheModal = false">Annuler</button>
-                        <button type="submit" class="btn btn-primary">Créer Tache</button>
                     </div>
                 </EditForm>
             </div>
@@ -727,107 +317,38 @@
 }
 
 @code {
-    // --- RenderFragment Récursif pour l'arborescence des tâches ---
-    private RenderFragment<TacheDTO> TaskTree => tache => __builder =>
-    {
-        <div class="task-node mb-2">
-            <div class="task-card d-flex justify-content-between align-items-center p-3 border rounded shadow-sm priority-@GetPriorityColor(tache.Priorite)" style="background-color: white;">
-                <div class="d-flex align-items-center" style="cursor: pointer; flex-grow: 1;" @onclick="() => SelectTache(tache)">
-                    <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(tache.Priorite)">
-                        @tache.Priorite
-                    </span>
-                    <span class="fw-bold leftmargin">@tache.Nom</span>
-                    <small class="text-muted ms-3">
-                        <i class="bi bi-person-circle"></i>
-
-                        @if (IsChefDeProjet && tache.EmployeAssigneId.HasValue)
-                        {
-                            <a href="profil/@tache.EmployeAssigneId"
-                               @onclick:stopPropagation="true"
-                               class="text-decoration-none fw-bold">
-                                @tache.EmployeAssigneNom
-                            </a>
-                        }
-                        else
-                        {
-                            @(tache.EmployeAssigneNom ?? "Non assigné")
-                        }
-                    </small>
-                        <span class="badge bg-info ms-2">@tache.Statut.ToString().Replace("_", " ")</span>
-                </div>
-
-                <div class="actions">
-                    <button class="btn btn-outline-primary btn-sm rounded-circle"
-                            title="Ajouter une sous-tâche"
-                            @onclick:stopPropagation="true"
-                            @onclick="() => CreateNewTache(tache.Id)">
-                        <i class="bi bi-plus"></i>
-                    </button>
-                </div>
-            </div>
-
-            @{
-                var enfants = Taches.Where(t => t.TacheParenteId == tache.Id).ToList();
-            }
-            @if (enfants.Any())
-            {
-                <div class="task-children ps-4 mt-2 border-start ms-3">
-                    @foreach (var enfant in enfants)
-                    {
-                        @TaskTree(enfant)
-                    }
-                </div>
-            }
-        </div>
-    };
     [SupplyParameterFromQuery]
     public int? ProjetId { get; set; }
+
     private List<ProjetDTO> Projetsinternes = new List<ProjetDTO>();
-    private List<EmployeDTO> Employes = new List<EmployeDTO>();
     private List<ProjetDTO> Projetsexternes = new List<ProjetDTO>();
-    private List<EntiteDTO> Entites = new List<EntiteDTO>();
-    private List<TacheDTO> Taches = new List<TacheDTO>();
     private List<TypeProjetDTO> TypesProjet = new List<TypeProjetDTO>();
+    private List<EntiteDTO> Entites = new List<EntiteDTO>();
+
     private ProjetDTO? SelectedProjet;
-    private TacheDTO? SelectedTache;
-    private bool showcreateProjetModal = false;
-    private bool showcreateTacheModal = false;
-    private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
-    private TacheCreateDTO NewTache = new TacheCreateDTO();
     private string ActiveTab = "overview";
     private string? ErrorMessage;
-
-    // Variables de l'utilisateur connecté
+    
+    // Variables utilisateur
     private int EmployeConnecteId;
     private string EmployeConnecteNom = "";
     private bool IsChefDeProjet = false;
     private ClaimsPrincipal _user;
 
-    // Calendrier vars
-    private List<FeuilleTempsDTO> FeuillesTemps = new();
-    private int SelectedEmployeId;
-    private int NumSemaine;
-    private int Annee;
-    private bool IsLoadingCalendrier = false;
-    private DateTime StartOfWeek;
-    private DateTime EndOfWeek;
-    private List<JourSemaine> JoursSemaine = new();
+    // Gestion Modal Création Projet
+    private bool showcreateProjetModal = false;
+    private ProjetCreateDTO NewProjet = new ProjetCreateDTO();
 
-    // Modals vars
-    private bool ShowModal = false;
-    private FeuilleTempsDTO? EditingFeuille;
-    private DateTime ModalDate;
-    private bool ModalEstMatin;
-    private int idtache;
-    private string? ModalCommentaire;
-
+    // Gestion Modal Création Entité (Appelée depuis Création Projet)
     public bool ShowModalCreateEntite = false;
     public EntiteCreateDTO? NewEntite = new EntiteCreateDTO();
+
+    // Communication inter-onglets (Participants -> Taches)
+    private TacheDTO? TacheToSelectFromParticipants;
 
     protected override async Task OnInitializedAsync()
     {
         EntiteState.OnChange += HandleEntiteChanged;
-
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _user = authState.User;
 
@@ -841,31 +362,27 @@
                 var nom = _user.FindFirst("nom")?.Value ?? "";
                 EmployeConnecteNom = $"{prenom} {nom}";
                 IsChefDeProjet = _user.IsInRole("Chef de projet");
-
             }
-
             Entites = await EntiteService.GetAll();
         }
 
-
         if (ProjetId.HasValue)
         {
-            var projetAChercher = Projetsinternes.Concat(Projetsexternes)
-                                                 .FirstOrDefault(p => p.Id == ProjetId.Value);
+            await GetProjets(); // S'assurer que les listes sont chargées
+            var projetAChercher = Projetsinternes.Concat(Projetsexternes).FirstOrDefault(p => p.Id == ProjetId.Value);
             if (projetAChercher != null)
             {
                 await SelectProjet(projetAChercher);
             }
         }
-
-        await GetProjets();
-
+        else
+        {
+            await GetProjets();
+        }
+        
+        // Initialisation par défaut pour le formulaire
         NewProjet.DateDebut = DateTime.Now;
         NewProjet.Priorite = NiveauPriorite.Normale;
-
-        var now = DateTime.Now;
-        NumSemaine = ISOWeek.GetWeekOfYear(now);
-        Annee = now.Year;
     }
 
     private async Task GetProjets()
@@ -905,19 +422,11 @@
     {
         SelectedProjet = projet;
         ActiveTab = "overview";
-        try
-        {
-            Taches = await TacheService.GetTachesByProjetId(projet.Id);
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors du chargement des tâches : {ex.Message}";
-        }
     }
 
-    private void SelectTache(TacheDTO tache)
+    private string GetClassForProjet(ProjetDTO p)
     {
-        SelectedTache = tache;
+        return p == SelectedProjet ? "project-item active" : "project-item";
     }
 
     private async Task CreateNewProjet()
@@ -929,6 +438,7 @@
             Priorite = NiveauPriorite.Normale,
             EntiteRealisatriceId = EntiteState.SelectedEntiteId
         };
+
         if (TypesProjet.Count == 0)
         {
             try
@@ -942,51 +452,6 @@
         }
         showcreateProjetModal = true;
     }
-
-    private async Task CreateNewTache(int? parentId = null)
-    {
-        ErrorMessage = null;
-        int? idvide = null;
-        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId,idvide);
-        NewTache = new TacheCreateDTO
-        {
-            DateDebut = DateTime.Now,
-            Priorite = NiveauPriorite.Normale,
-            TacheParenteId = parentId
-        };
-        showcreateTacheModal = true;
-    }
-
-    private async Task SaveNewTache()
-    {
-        ErrorMessage = null;
-
-        if (SelectedProjet != null)
-        {
-            NewTache.ProjetId = SelectedProjet.Id;
-        }
-
-        if (!IsChefDeProjet || NewTache.EmployeAssigneId == null)
-        {
-            NewTache.EmployeAssigneId = EmployeConnecteId;
-        }
-
-        try
-        {
-            var createdTache = await TacheService.Post(NewTache);
-            Taches.Add(createdTache);
-
-            showcreateTacheModal = false;
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors de la création de la tâche : {ex.Message}";
-            Console.WriteLine(ErrorMessage);
-        }
-    }
-
-    private string GetPriorityColor(NiveauPriorite p) => p.ToString();
 
     private async Task SaveNewProjet()
     {
@@ -1004,269 +469,7 @@
         }
     }
 
-    private string GetClassForProjet(ProjetDTO p)
-    {
-        return p == SelectedProjet ? "project-item active" : "project-item";
-    }
-
-    // ============================================
-    // CALENDRIER - NOUVELLE IMPLÉMENTATION
-    // ============================================
-
-    private async Task InitCalendrier()
-    {
-        if (SelectedProjet == null) return;
-
-        IsLoadingCalendrier = true;
-        ErrorMessage = null;
-
-        try
-        {
-            if(Employes == null || !Employes.Any())
-            {
-                int? idvide = null;
-                Employes = await EmployeService.GetEmployeesByEntiteEtProjet(
-                    EntiteState.SelectedEntiteId ?? 0,
-                    idvide
-                );
-            }
-
-            if (IsChefDeProjet)
-            {
-                if (Employes.Any())
-                {
-                    SelectedEmployeId = Employes.First().Id;
-                }
-            }
-            else
-            {
-                SelectedEmployeId = EmployeConnecteId;
-            }
-
-            await LoadCalendrierData();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors de l'initialisation du calendrier : {ex.Message}";
-        }
-        finally
-        {
-            IsLoadingCalendrier = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task LoadCalendrierData()
-    {
-        if (SelectedEmployeId == 0) return;
-
-        IsLoadingCalendrier = true;
-        ErrorMessage = null;
-        StateHasChanged();
-
-        try
-        {
-            FeuillesTemps = await FeuilleTempsService.GetBySemaine(
-                SelectedEmployeId,
-                NumSemaine,
-                Annee,
-                SelectedProjet.Id
-            );
-
-            CalculateDates();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur chargement calendrier : {ex.Message}";
-        }
-        finally
-        {
-            IsLoadingCalendrier = false;
-            StateHasChanged();
-        }
-    }
-
-    private void CalculateDates()
-    {
-        // Calcul ISO 8601 de la semaine
-        var jan4 = new DateTime(Annee, 1, 4);
-        int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
-        var firstMonday = jan4.AddDays(-daysOffset);
-
-        StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
-        EndOfWeek = StartOfWeek.AddDays(4); // Vendredi
-
-        JoursSemaine = new List<JourSemaine>
-        {
-            new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
-            new JourSemaine { Nom = "Mardi", Date = StartOfWeek.AddDays(1) },
-            new JourSemaine { Nom = "Mercredi", Date = StartOfWeek.AddDays(2) },
-            new JourSemaine { Nom = "Jeudi", Date = StartOfWeek.AddDays(3) },
-            new JourSemaine { Nom = "Vendredi", Date = StartOfWeek.AddDays(4) }
-        };
-    }
-
-    private async Task GoToCurrentWeek()
-    {
-        var now = DateTime.Now;
-        NumSemaine = ISOWeek.GetWeekOfYear(now);
-        Annee = now.Year;
-        await LoadCalendrierData();
-    }
-
-    private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
-    {
-        var feuille = FeuillesTemps.FirstOrDefault(f =>
-            f.Date.Date == date.Date && f.EstMatin == estMatin);
-
-        // Déterminer si la cellule est éditable
-        bool isEditable = SelectedEmployeId == EmployeConnecteId;
-        var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
-
-        if (!isEditable)
-        {
-            cellClass += " read-only";
-        }
-
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", cellClass);
-
-        if (isEditable)
-        {
-            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
-        }
-
-        if (feuille != null)
-        {
-            builder.OpenElement(3, "div");
-            builder.AddAttribute(4, "class", "cell-content");
-
-            builder.OpenElement(5, "div");
-            builder.AddAttribute(6, "class", "presence-indicator");
-            builder.AddContent(7, "✓ Présent");
-            builder.CloseElement();
-
-            if (!string.IsNullOrEmpty(feuille.Commentaire))
-            {
-                builder.OpenElement(8, "div");
-                builder.AddAttribute(9, "class", "commentaire");
-                builder.AddContent(10, TruncateText(feuille.Commentaire, 50));
-                builder.CloseElement();
-            }
-
-            builder.CloseElement();
-        }
-        else
-        {
-            if (isEditable)
-            {
-                builder.OpenElement(11, "div");
-                builder.AddAttribute(12, "class", "cell-empty-text");
-                builder.AddContent(13, "+ Ajouter");
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.OpenElement(14, "div");
-                builder.AddAttribute(15, "class", "cell-empty-text");
-                builder.AddContent(16, "—");
-                builder.CloseElement();
-            }
-        }
-
-        builder.CloseElement();
-    };
-
-    private string TruncateText(string text, int maxLength)
-    {
-        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
-            return text;
-
-        return text.Substring(0, maxLength) + "...";
-    }
-
-    private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
-    {
-        if (SelectedEmployeId != EmployeConnecteId)
-            return;
-
-        EditingFeuille = feuille;
-        ModalDate = date;
-        ModalEstMatin = estMatin;
-        ModalCommentaire = feuille?.Commentaire;
-        ShowModal = true;
-
-    }
-
-    private void CloseModal()
-    {
-        ShowModal = false;
-        EditingFeuille = null;
-        ModalCommentaire = null;
-    }
-
-    private async Task SaveFeuille()
-    {
-        ErrorMessage = null;
-
-        try
-        {
-            if (EditingFeuille != null)
-            {
-                // Modification
-                var updateDto = new FeuilleTempsUpdateDTO
-                {
-                    Id = EditingFeuille.Id,
-                    Commentaire = ModalCommentaire,
-                    TacheId = idtache,
-                    ProjetId = SelectedProjet.Id
-                };
-                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
-            }
-            else
-            {
-                // Création
-                var createDto = new FeuilleTempsCreateDTO
-                {
-                    Date = ModalDate,
-                    EstMatin = ModalEstMatin,
-                    ProjetId = SelectedProjet?.Id,
-                    Commentaire = ModalCommentaire,
-                    TacheId = idtache,
-                };
-                await FeuilleTempsService.Post(createDto);
-            }
-
-            await LoadCalendrierData();
-            CloseModal();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors de l'enregistrement : {ex.Message}";
-        }
-    }
-
-    private async Task DeleteFeuille()
-    {
-        if (EditingFeuille == null) return;
-
-        ErrorMessage = null;
-
-        try
-        {
-            await FeuilleTempsService.Delete(EditingFeuille.Id);
-            await LoadCalendrierData();
-            CloseModal();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Erreur lors de la suppression : {ex.Message}";
-        }
-    }
-
-    // ============================================
-    // GESTION DES ENTITÉS
-    // ============================================
+    // --- GESTION ENTITÉ (Nécessaire ici car la modal est au niveau racine) ---
 
     private void OnTypeEntiteChanged(bool estEntreprise)
     {
@@ -1317,35 +520,16 @@
         }
     }
 
-    // Charge les employés si la liste est vide au moment du clic sur l'onglet
-    private async Task LoadParticipants()
+    // Callback pour changer d'onglet depuis le composant enfant "Participants"
+    private void HandleRequestSelectTache(TacheDTO tache)
     {
-        if (Employes == null || !Employes.Any())
-        {
-            try
-            {
-                // On récupère les employés (même logique que InitCalendrier)
-                Employes = await EmployeService.GetEmployeesByEntiteEtProjet(
-                    EntiteState.SelectedEntiteId ?? 0,
-                    null
-                );
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Erreur chargement participants : {ex.Message}";
-            }
-            StateHasChanged();
-        }
+        TacheToSelectFromParticipants = tache;
+        ActiveTab = "taches";
+        StateHasChanged();
     }
-
+    
     public void Dispose()
     {
         EntiteState.OnChange -= HandleEntiteChanged;
-    }
-
-    private class JourSemaine
-    {
-        public string Nom { get; set; } = "";
-        public DateTime Date { get; set; }
     }
 }

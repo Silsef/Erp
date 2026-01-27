@@ -1,0 +1,402 @@
+﻿@using Shared_Erp.FeuilleTemps
+@using Shared_Erp.Projet
+@using Shared_Erp.Employe
+@using Shared_Erp.Tache
+@using Erp_Blazor.Service.States
+@using System.Globalization
+@inject IFeuilleTempsService FeuilleTempsService
+@inject IEmployeService EmployeService
+@inject ITacheService TacheService
+@inject EntiteState EntiteState
+
+<div class="calendrier-container">
+    <div class="calendrier-header">
+        <h3>📅 Feuilles de temps - @SelectedProjet.Nom</h3>
+
+        <div class="controls-row">
+            @* Sélection de l'employé (uniquement pour les chefs de projet) *@
+            @if (IsChefDeProjet)
+            {
+                <div class="control-group">
+                    <label>Employé :</label>
+                    <select class="form-select" @bind="SelectedEmployeId" @bind:after="LoadCalendrierData">
+                        @foreach (var emp in Employes)
+                        {
+                            <option value="@emp.Id">@emp.Prenom @emp.Nom</option>
+                        }
+                    </select>
+                </div>
+            }
+            else
+            {
+                <div class="control-group">
+                    <label>Employé :</label>
+                    <input type="text" class="form-control" value="@EmployeConnecteNom" disabled />
+                </div>
+            }
+
+            <div class="control-group">
+                <label>Semaine :</label>
+                <input type="number" class="form-control" min="1" max="53"
+                       @bind="NumSemaine" @bind:after="LoadCalendrierData" />
+            </div>
+            <div class="control-group">
+                <label>Année :</label>
+                <input type="number" class="form-control"
+                       @bind="Annee" @bind:after="LoadCalendrierData" />
+            </div>
+            <button class="btn btn-primary" @onclick="GoToCurrentWeek">
+                Semaine actuelle
+            </button>
+        </div>
+
+        <div class="periode-display">
+            Du @StartOfWeek.ToString("dd/MM/yyyy") au @EndOfWeek.ToString("dd/MM/yyyy")
+        </div>
+    </div>
+
+    @if (IsLoadingCalendrier)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <div class="calendar-grid">
+            <div class="calendar-header-cell corner-cell"></div>
+            @foreach (var jour in JoursSemaine)
+            {
+                <div class="calendar-header-cell day-header">
+                    <div class="day-name">@jour.Nom</div>
+                    <div class="day-date">@jour.Date.ToString("dd/MM")</div>
+                </div>
+            }
+
+            <div class="calendar-row-header">Matin</div>
+            @foreach (var jour in JoursSemaine)
+            {
+                @RenderCell(jour.Date, true)
+            }
+
+            <div class="calendar-row-header">Après-midi</div>
+            @foreach (var jour in JoursSemaine)
+            {
+                @RenderCell(jour.Date, false)
+            }
+        </div>
+    }
+</div>
+
+@if (ShowModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(EditingFeuille == null ? "Ajouter" : "Modifier") une feuille de temps
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" @bind="ModalDate" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Période</label>
+                        <input type="text" class="form-control"
+                               value="@(ModalEstMatin ? "Matin" : "Après-midi")" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sur quelle tache avez vous travaillé ?</label>
+                        <div class="d-flex gap-2">
+                            <InputSelect class="form-select" @bind-Value="idtache">
+                                <option value="">-- Sélectionner une tache --</option>
+                                @foreach (var ta in TachesList)
+                                {
+                                    <option value="@ta.Id">@ta.Nom</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Qu'avez-vous fait ?</strong></label>
+                        <textarea class="form-control" rows="5" @bind="ModalCommentaire"
+                                  placeholder="Décrivez ce que vous avez réalisé pendant cette demi-journée..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (EditingFeuille != null && !IsChefDeProjet)
+                    {
+                        <button type="button" class="btn btn-danger me-auto" @onclick="DeleteFeuille">Supprimer</button>
+                    }
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Annuler</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveFeuille">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ProjetDTO SelectedProjet { get; set; } = null!;
+    [Parameter] public bool IsChefDeProjet { get; set; }
+    [Parameter] public int EmployeConnecteId { get; set; }
+    [Parameter] public string EmployeConnecteNom { get; set; } = "";
+
+    private List<FeuilleTempsDTO> FeuillesTemps = new();
+    private List<EmployeDTO> Employes = new();
+    private List<TacheDTO> TachesList = new();
+
+    private int SelectedEmployeId;
+    private int NumSemaine;
+    private int Annee;
+    private bool IsLoadingCalendrier = false;
+    private DateTime StartOfWeek;
+    private DateTime EndOfWeek;
+    private List<JourSemaine> JoursSemaine = new();
+    private string? ErrorMessage;
+
+    // Modals vars
+    private bool ShowModal = false;
+    private FeuilleTempsDTO? EditingFeuille;
+    private DateTime ModalDate;
+    private bool ModalEstMatin;
+    private int idtache;
+    private string? ModalCommentaire;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadResources();
+        if (SelectedEmployeId == 0)
+        {
+            // Si chef, on prend le premier de la liste, sinon soi-même
+            if (IsChefDeProjet && Employes.Any())
+                SelectedEmployeId = Employes.First().Id;
+            else
+                SelectedEmployeId = EmployeConnecteId;
+        }
+        await LoadCalendrierData();
+    }
+
+    private async Task LoadResources()
+    {
+        int? idvide = null;
+        Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId ?? 0, idvide);
+        // On charge les tâches pour le dropdown de la modal
+        TachesList = await TacheService.GetTachesByProjetId(SelectedProjet.Id);
+    }
+
+    private async Task LoadCalendrierData()
+    {
+        if (SelectedEmployeId == 0) return;
+        IsLoadingCalendrier = true;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            FeuillesTemps = await FeuilleTempsService.GetBySemaine(
+                SelectedEmployeId,
+                NumSemaine,
+                Annee,
+                SelectedProjet.Id
+            );
+
+            CalculateDates();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur chargement calendrier : {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingCalendrier = false;
+        }
+    }
+
+    private void CalculateDates()
+    {
+        var jan4 = new DateTime(Annee, 1, 4);
+        int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
+        var firstMonday = jan4.AddDays(-daysOffset);
+        StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
+        EndOfWeek = StartOfWeek.AddDays(4);
+
+        JoursSemaine = new List<JourSemaine>
+        {
+            new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
+            new JourSemaine { Nom = "Mardi", Date = StartOfWeek.AddDays(1) },
+            new JourSemaine { Nom = "Mercredi", Date = StartOfWeek.AddDays(2) },
+            new JourSemaine { Nom = "Jeudi", Date = StartOfWeek.AddDays(3) },
+            new JourSemaine { Nom = "Vendredi", Date = StartOfWeek.AddDays(4) }
+        };
+    }
+
+    private async Task GoToCurrentWeek()
+    {
+        var now = DateTime.Now;
+        NumSemaine = ISOWeek.GetWeekOfYear(now);
+        Annee = now.Year;
+        await LoadCalendrierData();
+    }
+
+    private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
+    {
+        var feuille = FeuillesTemps.FirstOrDefault(f =>
+            f.Date.Date == date.Date && f.EstMatin == estMatin);
+
+        bool isEditable = SelectedEmployeId == EmployeConnecteId;
+        var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
+        if (!isEditable)
+        {
+            cellClass += " read-only";
+        }
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", cellClass);
+        if (isEditable)
+        {
+            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
+        }
+
+        if (feuille != null)
+        {
+            builder.OpenElement(3, "div");
+            builder.AddAttribute(4, "class", "cell-content");
+
+            builder.OpenElement(5, "div");
+            builder.AddAttribute(6, "class", "presence-indicator");
+            builder.AddContent(7, "✓ Présent");
+            builder.CloseElement();
+
+            if (!string.IsNullOrEmpty(feuille.Commentaire))
+            {
+                builder.OpenElement(8, "div");
+                builder.AddAttribute(9, "class", "commentaire");
+                builder.AddContent(10, TruncateText(feuille.Commentaire, 50));
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        }
+        else
+        {
+            if (isEditable)
+            {
+                builder.OpenElement(11, "div");
+                builder.AddAttribute(12, "class", "cell-empty-text");
+                builder.AddContent(13, "+ Ajouter");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(14, "div");
+                builder.AddAttribute(15, "class", "cell-empty-text");
+                builder.AddContent(16, "—");
+                builder.CloseElement();
+            }
+        }
+
+        builder.CloseElement();
+    };
+
+    private string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+        return text.Substring(0, maxLength) + "...";
+    }
+
+    private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
+    {
+        if (SelectedEmployeId != EmployeConnecteId)
+            return;
+
+        EditingFeuille = feuille;
+        ModalDate = date;
+        ModalEstMatin = estMatin;
+        ModalCommentaire = feuille?.Commentaire;
+        idtache = feuille?.TacheId ?? 0;
+        ShowModal = true;
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        EditingFeuille = null;
+        ModalCommentaire = null;
+    }
+
+    private async Task SaveFeuille()
+    {
+        ErrorMessage = null;
+        try
+        {
+            if (EditingFeuille != null)
+            {
+                // Modification
+                var updateDto = new FeuilleTempsUpdateDTO
+                {
+                    Id = EditingFeuille.Id,
+                    Commentaire = ModalCommentaire,
+                    TacheId = idtache,
+                    ProjetId = SelectedProjet.Id
+                };
+                await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
+            }
+            else
+            {
+                // Création
+                var createDto = new FeuilleTempsCreateDTO
+                {
+                    Date = ModalDate,
+                    EstMatin = ModalEstMatin,
+                    ProjetId = SelectedProjet?.Id,
+                    Commentaire = ModalCommentaire,
+                    TacheId = idtache,
+                };
+                await FeuilleTempsService.Post(createDto);
+            }
+
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de l'enregistrement : {ex.Message}";
+        }
+    }
+
+    private async Task DeleteFeuille()
+    {
+        if (EditingFeuille == null) return;
+        ErrorMessage = null;
+        try
+        {
+            await FeuilleTempsService.Delete(EditingFeuille.Id);
+            await LoadCalendrierData();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la suppression : {ex.Message}";
+        }
+    }
+
+    private class JourSemaine
+    {
+        public string Nom { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+}

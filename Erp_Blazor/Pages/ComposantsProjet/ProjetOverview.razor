@@ -1,0 +1,21 @@
+﻿@using Shared_Erp.Projet
+
+<div class="animate fade-in">
+    <h4>Informations Générales</h4>
+    <p><strong>Description :</strong> @SelectedProjet.Description</p>
+    <p><strong>Type :</strong> @SelectedProjet.TypeProjetNom</p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <p><strong>Début :</strong> @SelectedProjet.DateDebut.ToShortDateString()</p>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Fin :</strong> @(SelectedProjet.DateFin?.ToShortDateString() ?? "En cours")</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ProjetDTO SelectedProjet { get; set; } = null!;
+}

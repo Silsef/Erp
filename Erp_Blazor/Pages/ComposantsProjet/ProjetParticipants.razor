@@ -1,0 +1,155 @@
+﻿@using Shared_Erp.Employe
+@using Shared_Erp.Projet
+@using Shared_Erp.Tache
+@using Shared_Erp.Enums
+@using Erp_Blazor.Service.States
+@inject IEmployeService EmployeService
+@inject ITacheService TacheService
+@inject EntiteState EntiteState
+
+<div class="animate fade-in mt-3">
+    @if (IsLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @* Boucle sur chaque employé *@
+            @foreach (var emp in Employes)
+            {
+                // Récupération des tâches de l'employé pour ce projet
+                var tasks = Taches.Where(t => t.EmployeAssigneId == emp.Id).OrderBy(t => t.DateDebut).ToList();
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-white d-flex align-items-center py-3">
+                            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
+                                <span class="fw-bold">@emp.Prenom[0]@emp.Nom[0]</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">@emp.Prenom @emp.Nom</h6>
+                                <small class="text-muted">@tasks.Count tâche(s)</small>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush flex-grow-1">
+                            @if (tasks.Any())
+                            {
+                                @foreach (var task in tasks)
+                                {
+                                    <button type="button"
+                                            class="list-group-item list-group-item-action border-0 border-bottom py-3"
+                                            @onclick="() => RequestSelectTache(task)">
+                                        <div class="d-flex w-100 justify-content-between align-items-start mb-1">
+                                            <span class="fw-semibold text-truncate me-2" style="max-width: 70%;">@task.Nom</span>
+                                            <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
+                                                @task.Priorite
+                                            </span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar2-week me-1"></i>
+                                                @task.DateDebut.ToString("dd/MM")
+                                                @if (task.DateFin.HasValue)
+                                                {
+                                                    <span>- @task.DateFin.Value.ToString("dd/MM")</span>
+                                                }
+                                            </small>
+
+                                            @if (task.Statut == Statut.Termine)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success" title="Terminé"></i>
+                                            }
+                                            else if (task.Statut == Statut.En_Cours && task.DateFin.HasValue && task.DateFin < DateTime.Now)
+                                            {
+                                                <i class="bi bi-exclamation-triangle-fill text-danger" title="En retard"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-hourglass-split text-secondary" title="@task.Statut.ToString().Replace("_", " ")"></i>
+                                            }
+                                        </div>
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4">
+                                    <i class="bi bi-clipboard fs-1 mb-2 opacity-50"></i>
+                                    <small>Aucune tâche assignée</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @{
+                var unassigned = Taches.Where(t => t.EmployeAssigneId == null).ToList();
+            }
+            @if (unassigned.Any())
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-warning shadow-sm">
+                        <div class="card-header bg-warning bg-opacity-10 text-dark d-flex align-items-center py-3">
+                            <i class="bi bi-question-circle-fill text-warning fs-4 me-3"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Non assignées</h6>
+                                <small class="text-muted">@unassigned.Count tâche(s)</small>
+                            </div>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            @foreach (var task in unassigned)
+                            {
+                                <button type="button" class="list-group-item list-group-item-action border-0 border-bottom py-3" @onclick="() => RequestSelectTache(task)">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <span class="fw-semibold">@task.Nom</span>
+                                        <span class="ms-3 badge rounded-pill bulle-priority-@GetPriorityColor(task.Priorite)">
+                                            @task.Priorite
+                                        </span>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjetDTO SelectedProjet { get; set; } = null!;
+    [Parameter] public EventCallback<TacheDTO> OnRequestSelectTache { get; set; }
+
+    private List<EmployeDTO> Employes = new();
+    private List<TacheDTO> Taches = new();
+    private bool IsLoading = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SelectedProjet == null) return;
+
+        IsLoading = true;
+        try
+        {
+            // On charge les données localement
+            Employes = await EmployeService.GetEmployeesByEntiteEtProjet(EntiteState.SelectedEntiteId ?? 0, null);
+            Taches = await TacheService.GetTachesByProjetId(SelectedProjet.Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        IsLoading = false;
+    }
+
+    private string GetPriorityColor(NiveauPriorite p) => p.ToString();
+
+    private async Task RequestSelectTache(TacheDTO tache)
+    {
+        await OnRequestSelectTache.InvokeAsync(tache);
+    }
+}
