@@ -1,166 +1,133 @@
 from paddleocr import PaddleOCR
 import cv2
 import numpy as np
-from PIL import Image
 from typing import Tuple, List, Optional
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-
 class OCRService:
-    """Service pour l'extraction de texte des images de tickets"""
+    """Service optimisé pour l'extraction de texte (Stabilité CPU + Gestion basse résolution)"""
     
     def __init__(self):
-        """Initialise PaddleOCR"""
+        """Initialise PaddleOCR avec les paramètres de détection agressifs"""
         try:
-            # Initialiser PaddleOCR (français + anglais)
-            # Paramètres minimaux compatibles avec toutes versions
+            # DÉSACTIVATION TOTALE DE MKLDNN (Pour éviter le crash 'ConvertPirAttribute')
+            os.environ['FLAGS_use_mkldnn'] = 'False' 
+            os.environ['FLAGS_use_ngraph'] = 'False'
+            os.environ['CUDA_VISIBLE_DEVICES'] = '' # Force CPU
+            
+            import paddle
+            paddle.set_device('cpu')
+            
+            logger.info("Configuration OCR : Mode CPU Standard (Stable)")
+            
+            # --- CONFIGURATION PRINCIPALE ---
             self.ocr = PaddleOCR(
-                use_angle_cls=True,
-                lang='fr'
+                use_angle_cls=False,         # DÉSACTIVÉ pour la vitesse (gain majeur)
+                lang='fr',
+                enable_mkldnn=False,         # DÉSACTIVÉ pour éviter le crash
+                use_tensorrt=False,
+                
+                # Paramètres de sensibilité (CRUCIAL pour votre ticket pâle/petit)
+                det_db_thresh=0.1,           # Détecte le texte très faible
+                det_db_box_thresh=0.3,       # Accepte les boîtes incertaines
+                det_db_unclip_ratio=2.0,     # Élargit les zones (capture les lettres floues)
+                use_dilation=True            # Connecte les caractères brisés
             )
-            logger.info("PaddleOCR initialisé avec succès")
+            logger.info("Moteur PaddleOCR prêt (Mode Sensible)")
+            
         except Exception as e:
-            logger.error(f"Erreur lors de l'initialisation de PaddleOCR: {e}")
-            raise
+            logger.error(f"Erreur init OCR: {e}")
+            # Fallback absolu
+            self.ocr = PaddleOCR(use_angle_cls=False, lang='fr', enable_mkldnn=False)
     
     def preprocess_image(self, image: np.ndarray) -> np.ndarray:
         """
-        Prétraite l'image pour améliorer l'OCR
-        
-        Args:
-            image: Image en format numpy array
-            
-        Returns:
-            Image prétraitée (conserve 3 canaux pour PaddleOCR)
+        Agrandit les petites images et applique une netteté.
         """
-        # Conversion en niveaux de gris
+        if image is None:
+            return None
+
+        # 1. Conversion BGR -> RGB (Vital pour Paddle)
         if len(image.shape) == 3:
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = image
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+        h, w = image.shape[:2]
         
-        # Augmentation du contraste avec CLAHE
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        enhanced = clahe.apply(gray)
+        # 2. Agrandissement si nécessaire (target ~1000px)
+        min_dim = 1000
+        if min(h, w) < min_dim:
+            scale = min_dim / min(h, w)
+            scale = min(scale, 5.0) # Limite x5
+            
+            if scale > 1.0:
+                new_w = int(w * scale)
+                new_h = int(h * scale)
+                # L'interpolation CUBIC garde les textes plus nets
+                image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+                logger.info(f"Upscale: {w}x{h} -> {new_w}x{new_h} (x{scale:.2f})")
+                
+                # 3. Filtre de netteté (Sharpen)
+                kernel = np.array([[0, -1, 0], 
+                                   [-1, 5,-1], 
+                                   [0, -1, 0]])
+                image = cv2.filter2D(image, -1, kernel)
+
+        return image
+    
+    def _parse_ocr_result(self, result) -> Tuple[str, float]:
+        if not result or not result[0]:
+            logger.warning("OCR : Aucun texte détecté.")
+            return "", 0.0
         
-        # Débruitage
-        denoised = cv2.fastNlMeansDenoising(enhanced)
+        lines = []
+        scores = []
         
-        # Binarisation adaptative
-        binary = cv2.adaptiveThreshold(
-            denoised,
-            255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            11,
-            2
-        )
+        for line in result[0]:
+            try:
+                # Format: [[[x,y],..], ("texte", score)]
+                text_info = line[1]
+                text = str(text_info[0])
+                score = float(text_info[1])
+                
+                if text.strip():
+                    lines.append(text)
+                    scores.append(score)
+            except Exception:
+                continue
         
-        # IMPORTANT: Convertir en 3 canaux pour PaddleOCR
-        # PaddleOCR attend une image avec 3 canaux (BGR)
-        processed_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+        full_text = "\n".join(lines)
+        avg_conf = sum(scores) / len(scores) if scores else 0.0
         
-        return processed_bgr
+        logger.info(f"Succès OCR : {len(lines)} lignes (Conf: {avg_conf:.2f})")
+        return full_text, avg_conf
     
     def extract_text(self, image_path: str, preprocess: bool = True) -> Tuple[str, float]:
-        """
-        Extrait le texte d'une image de ticket
-        
-        Args:
-            image_path: Chemin vers l'image
-            preprocess: Appliquer le prétraitement ou non
-            
-        Returns:
-            Tuple (texte extrait, score de confiance moyen)
-        """
         try:
-            # Charger l'image
             image = cv2.imread(image_path)
-            if image is None:
-                raise ValueError(f"Impossible de charger l'image: {image_path}")
-            
-            # Prétraitement optionnel
-            if preprocess:
-                processed_image = self.preprocess_image(image)
-            else:
-                processed_image = image
-            
-            # OCR - CORRECTION: retrait du paramètre cls
-            result = self.ocr.ocr(processed_image)
-            
-            if not result or not result[0]:
-                logger.warning("Aucun texte détecté dans l'image")
-                return "", 0.0
-            
-            # Extraire le texte et calculer la confiance moyenne
-            lines = []
-            confidences = []
-            
-            for line in result[0]:
-                text = line[1][0]  # Texte détecté
-                confidence = line[1][1]  # Score de confiance
-                lines.append(text)
-                confidences.append(confidence)
-            
-            full_text = "\n".join(lines)
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-            
-            logger.info(f"Texte extrait avec confiance moyenne: {avg_confidence:.2f}")
-            return full_text, avg_confidence
-            
+            if image is None: return "", 0.0
+            return self.process_ocr(image)
         except Exception as e:
-            logger.error(f"Erreur lors de l'extraction de texte: {e}")
+            logger.error(f"Erreur extract_text: {e}")
             raise
     
     def extract_text_from_bytes(self, image_bytes: bytes, preprocess: bool = True) -> Tuple[str, float]:
-        """
-        Extrait le texte d'une image en bytes
-        
-        Args:
-            image_bytes: Image en bytes
-            preprocess: Appliquer le prétraitement ou non
-            
-        Returns:
-            Tuple (texte extrait, score de confiance moyen)
-        """
         try:
-            # Convertir bytes en numpy array
             nparr = np.frombuffer(image_bytes, np.uint8)
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            
-            if image is None:
-                raise ValueError("Impossible de décoder l'image")
-            
-            # Prétraitement optionnel
-            if preprocess:
-                processed_image = self.preprocess_image(image)
-            else:
-                processed_image = image
-            
-            # OCR - CORRECTION: retrait du paramètre cls
-            result = self.ocr.ocr(processed_image)
-            
-            if not result or not result[0]:
-                logger.warning("Aucun texte détecté dans l'image")
-                return "", 0.0
-            
-            # Extraire le texte et calculer la confiance moyenne
-            lines = []
-            confidences = []
-            
-            for line in result[0]:
-                text = line[1][0]
-                confidence = line[1][1]
-                lines.append(text)
-                confidences.append(confidence)
-            
-            full_text = "\n".join(lines)
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-            
-            return full_text, avg_confidence
-            
+            if image is None: return "", 0.0
+            return self.process_ocr(image)
         except Exception as e:
-            logger.error(f"Erreur lors de l'extraction de texte depuis bytes: {e}")
+            logger.error(f"Erreur extract_text_from_bytes: {e}")
             raise
+
+    def process_ocr(self, image):
+        # Pré-traitement (Agrandissement + RGB + Netteté)
+        proc_image = self.preprocess_image(image)
+        
+        # Appel simple sans arguments conflictuels
+        result = self.ocr.ocr(proc_image)
+        
+        return self._parse_ocr_result(result)

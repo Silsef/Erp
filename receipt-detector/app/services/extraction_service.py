@@ -5,92 +5,80 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class ExtractionService:
-    """Service pour extraire les informations structurées du texte OCR"""
+    """Service avancé pour extraire les informations structurées du texte OCR"""
+
+    # --- PATTERNS REGEX AMÉLIORÉS ---
     
-    # Patterns regex pour les dates (formats français courants)
+    # Dates : gère les espaces (28 / 01 / 2026), les tirets, points et mois textuels
     DATE_PATTERNS = [
-        # Format: 28/01/2026, 28-01-2026, 28.01.2026
-        r'\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b',
-        # Format: 28 janvier 2026, 28 janv 2026
-        r'\b(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|déc)\.?\s+(\d{4})\b',
-        # Format: 2026-01-28
-        r'\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b',
+        # JJ/MM/AAAA ou JJ-MM-AAAA avec espaces optionnels
+        r'\b(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{2,4})\b',
+        # YYYY-MM-DD
+        r'\b(\d{4})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\b',
+        # 28 janv. 2026
+        r'\b(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|déc)[^\d]*(\d{2,4})\b'
     ]
-    
-    # Patterns pour les montants
+
+    # Montants : cherche les mots clés TOTAL, mais aussi les montants isolés
+    # Gère les virgules, points, et espaces parasites (ex: 45 . 00)
     AMOUNT_PATTERNS = [
-        # Format: TOTAL: 45.50, Total : 45,50 EUR
-        r'(?:total|montant|somme|à\s+payer)[\s:]*([0-9]+[,\.][0-9]{2})\s*(?:€|EUR|euro)?',
-        # Format: 45.50€, 45,50 €, 45.50 EUR
-        r'\b([0-9]+[,\.][0-9]{2})\s*(?:€|EUR|euro)\b',
-        # Format juste avant la fin (dernière ligne avec montant)
-        r'\b([0-9]+[,\.][0-9]{2})\s*$',
+        # Mots clés explicites suivis d'un montant
+        r'(?:total|montant|somme|payer|ttc)[\D]{0,15}?(\d+[\s\.,]*\d{0,2})(?:[\s]*(?:€|EUR|euro))?',
+        # Montant avec symbole devise à la fin (ex: 45.00 €)
+        r'\b(\d+[\s\.,]*\d{0,2})\s*(?:€|EUR|euro)\b',
+        # Montant isolé en fin de ligne (souvent le total sur un ticket)
+        r'^\s*(\d+[\s\.,]*\d{2})\s*$'
     ]
-    
-    # Patterns pour la TVA
+
+    # TVA : cherche les taux communs (20, 10, 5.5) et les mots clés
     TVA_PATTERNS = [
-        # Format: TVA 20%: 10.50, TVA: 10.50 EUR
-        r'(?:tva|t\.v\.a\.|taxe)[\s:]*(?:20%|10%|5,5%|2,1%)?[\s:]*([0-9]+[,\.][0-9]{2})',
-        # Format: TVA 20.00%  10.50
-        r'tva\s+[0-9]+[,\.][0-9]{1,2}%\s+([0-9]+[,\.][0-9]{2})',
-        # Format ligne avec "TVA" suivi d'un montant
-        r'tva.*?([0-9]+[,\.][0-9]{2})',
+        r'(?:tva|taxe|vat)[\D]{0,10}?(\d+[\s\.,]*\d{2})',
+        r'(\d+[\s\.,]*\d{2})\s*(?:%)',  # Montant suivi d'un %
+        r'\b(20[\.,]00|10[\.,]00|5[\.,]50)\b' # Taux explicites
     ]
-    
-    # Patterns pour les devises
-    CURRENCY_PATTERNS = [
-        r'\b(EUR|€|euro|euros)\b',
-        r'\b(USD|\$|dollar|dollars)\b',
-        r'\b(GBP|£|pound|livre)\b',
-        r'\b(CHF|franc)\b',
-    ]
-    
-    # Mapping devise -> code ISO
-    CURRENCY_MAPPING = {
-        '€': 'EUR',
-        'euro': 'EUR',
-        'euros': 'EUR',
-        'EUR': 'EUR',
-        '$': 'USD',
-        'dollar': 'USD',
-        'dollars': 'USD',
-        'USD': 'USD',
-        '£': 'GBP',
-        'pound': 'GBP',
-        'livre': 'GBP',
-        'GBP': 'GBP',
-        'franc': 'CHF',
-        'CHF': 'CHF',
-    }
-    
-    # Mapping mois français -> numéro
+
+    # Code postal (France) pour deviner l'adresse
+    ZIP_CODE_PATTERN = r'\b(\d{5})\b'
+
+    # Mapping mois textuels -> chiffres
     MONTH_MAPPING = {
-        'janvier': '01', 'janv': '01',
-        'février': '02', 'févr': '02',
-        'mars': '03',
-        'avril': '04', 'avr': '04',
-        'mai': '05',
-        'juin': '06',
-        'juillet': '07', 'juil': '07',
-        'août': '08',
-        'septembre': '09', 'sept': '09',
-        'octobre': '10', 'oct': '10',
-        'novembre': '11', 'nov': '11',
-        'décembre': '12', 'déc': '12',
+        'janvier': '01', 'janv': '01', 'février': '02', 'févr': '02', 'mars': '03',
+        'avril': '04', 'avr': '04', 'mai': '05', 'juin': '06',
+        'juillet': '07', 'juil': '07', 'août': '08', 'septembre': '09', 'sept': '09',
+        'octobre': '10', 'oct': '10', 'novembre': '11', 'nov': '11', 'décembre': '12', 'déc': '12'
     }
-    
-    def extract_date(self, text: str) -> Optional[str]:
-        """
-        Extrait la date du texte OCR
+
+    CURRENCY_MAPPING = {
+        '€': 'EUR', 'euro': 'EUR', 'euros': 'EUR', 'eur': 'EUR',
+        '$': 'USD', 'dollar': 'USD', 'usd': 'USD',
+        '£': 'GBP', 'livre': 'GBP', 'gbp': 'GBP',
+        'chf': 'CHF', 'franc': 'CHF'
+    }
+
+    def _clean_number_string(self, num_str: str) -> str:
+        """Nettoie une chaîne numérique OCR (enlève espaces, remplace ',' par '.')"""
+        if not num_str:
+            return ""
+        # Remplacer les confusions courantes OCR (O -> 0, l -> 1) si nécessaire
+        # num_str = num_str.replace('O', '0').replace('o', '0')
         
-        Args:
-            text: Texte extrait par OCR
-            
-        Returns:
-            Date au format ISO (YYYY-MM-DD) ou None
-        """
+        # Garder uniquement chiffres, point, virgule
+        clean = re.sub(r'[^\d,\.]', '', num_str)
+        # Remplacer virgule par point
+        clean = clean.replace(',', '.')
+        # Gérer les cas "1 000.00" où l'espace a sauté mais il reste un point bizarre
+        try:
+            # S'il y a plusieurs points, on garde le dernier comme décimale
+            if clean.count('.') > 1:
+                parts = clean.split('.')
+                clean = "".join(parts[:-1]) + '.' + parts[-1]
+            return clean
+        except Exception:
+            return clean
+
+    def extract_date(self, text: str) -> Optional[str]:
+        """Extrait la date la plus probable"""
         text_lower = text.lower()
         
         for pattern in self.DATE_PATTERNS:
@@ -98,145 +86,114 @@ class ExtractionService:
             for match in matches:
                 try:
                     groups = match.groups()
-                    
-                    # Format numérique (DD/MM/YYYY ou YYYY/MM/DD)
-                    if len(groups) == 3 and all(g.isdigit() or g in ['/', '-', '.'] for g in groups):
-                        if len(groups[0]) == 4:  # Format YYYY-MM-DD
-                            year, month, day = groups
-                        else:  # Format DD-MM-YYYY
-                            day, month, year = groups
+                    year, month, day = "", "", ""
+
+                    # Cas JJ MM AAAA
+                    if len(groups) >= 3:
+                        # Détection basique basée sur la taille
+                        g1, g2, g3 = groups[0], groups[1], groups[2]
                         
-                        # Gérer année sur 2 chiffres
+                        # Si le mois est textuel
+                        if g2 in self.MONTH_MAPPING:
+                            day, month_txt, year = g1, g2, g3
+                            month = self.MONTH_MAPPING[month_txt]
+                        # Si le premier groupe est l'année (YYYY-MM-DD)
+                        elif len(g1) == 4:
+                            year, month, day = g1, g2, g3
+                        # Sinon standard (DD-MM-YYYY)
+                        else:
+                            day, month, year = g1, g2, g3
+
+                        # Nettoyage
+                        year = year.replace(' ', '')
                         if len(year) == 2:
-                            year = '20' + year if int(year) < 50 else '19' + year
-                        
-                        # Valider la date
-                        date_obj = datetime(int(year), int(month), int(day))
-                        return date_obj.strftime('%Y-%m-%d')
-                    
-                    # Format avec mois en lettres
-                    elif len(groups) == 3 and groups[1] in self.MONTH_MAPPING:
-                        day, month_name, year = groups
-                        month = self.MONTH_MAPPING[month_name]
-                        date_obj = datetime(int(year), int(month), int(day))
-                        return date_obj.strftime('%Y-%m-%d')
-                        
-                except (ValueError, IndexError) as e:
-                    logger.debug(f"Date invalide ignorée: {match.group()} - {e}")
+                            year = '20' + year
+                            
+                        # Validation
+                        try:
+                            d = datetime(int(year), int(month), int(day))
+                            # On ne prend pas les dates dans le futur ou trop vieilles (ex: numéros de tel)
+                            if 2000 < d.year <= datetime.now().year + 1:
+                                return d.strftime('%Y-%m-%d')
+                        except ValueError:
+                            continue
+                except Exception as e:
+                    logger.debug(f"Erreur parsing date: {e}")
                     continue
-        
-        logger.warning("Aucune date valide trouvée")
         return None
-    
+
     def extract_amount(self, text: str) -> Optional[float]:
-        """
-        Extrait le montant total du texte OCR
-        
-        Args:
-            text: Texte extrait par OCR
-            
-        Returns:
-            Montant en float ou None
-        """
+        """Extrait le montant total (le plus grand montant trouvé proche d'un mot clé 'Total')"""
         text_lower = text.lower()
-        amounts = []
-        
+        candidates = []
+
         for pattern in self.AMOUNT_PATTERNS:
-            matches = re.finditer(pattern, text_lower, re.IGNORECASE | re.MULTILINE)
+            matches = re.finditer(pattern, text_lower, re.MULTILINE | re.IGNORECASE)
             for match in matches:
                 try:
-                    amount_str = match.group(1)
-                    # Remplacer virgule par point
-                    amount_str = amount_str.replace(',', '.')
-                    amount = float(amount_str)
-                    amounts.append(amount)
-                except (ValueError, IndexError) as e:
-                    logger.debug(f"Montant invalide ignoré: {match.group()} - {e}")
+                    # On prend le groupe qui contient les chiffres
+                    val_str = match.group(1)
+                    val_clean = self._clean_number_string(val_str)
+                    if val_clean:
+                        val = float(val_clean)
+                        # Filtre les montants aberrants (ex: codes barres, téléphones)
+                        if 0 < val < 10000: 
+                            candidates.append(val)
+                except Exception:
                     continue
         
-        if amounts:
-            # Retourner le montant le plus élevé (probablement le total)
-            max_amount = max(amounts)
-            logger.info(f"Montant extrait: {max_amount}")
-            return max_amount
-        
-        logger.warning("Aucun montant trouvé")
+        if candidates:
+            # Heuristique : le montant total est souvent le maximum trouvé
+            return max(candidates)
         return None
-    
+
     def extract_tva(self, text: str) -> Optional[float]:
-        """
-        Extrait le montant de la TVA du texte OCR
-        
-        Args:
-            text: Texte extrait par OCR
-            
-        Returns:
-            Montant TVA en float ou None
-        """
+        """Extrait la TVA"""
         text_lower = text.lower()
-        tva_amounts = []
+        candidates = []
         
         for pattern in self.TVA_PATTERNS:
-            matches = re.finditer(pattern, text_lower, re.IGNORECASE)
+            matches = re.finditer(pattern, text_lower, re.MULTILINE | re.IGNORECASE)
             for match in matches:
                 try:
-                    tva_str = match.group(1)
-                    # Remplacer virgule par point
-                    tva_str = tva_str.replace(',', '.')
-                    tva = float(tva_str)
-                    tva_amounts.append(tva)
-                except (ValueError, IndexError) as e:
-                    logger.debug(f"TVA invalide ignorée: {match.group()} - {e}")
+                    val_str = match.group(1)
+                    val_clean = self._clean_number_string(val_str)
+                    if val_clean:
+                        val = float(val_clean)
+                        if 0 < val < 1000: # TVA rarement > 1000 sur un ticket standard
+                            candidates.append(val)
+                except Exception:
                     continue
         
-        if tva_amounts:
-            # Retourner le montant le plus élevé si plusieurs trouvés
-            tva_amount = max(tva_amounts)
-            logger.info(f"TVA extraite: {tva_amount}")
-            return tva_amount
-        
-        logger.warning("Aucun montant de TVA trouvé")
+        if candidates:
+            return max(candidates)
         return None
-    
-    def extract_currency(self, text: str) -> Optional[str]:
-        """
-        Extrait la devise du texte OCR
-        
-        Args:
-            text: Texte extrait par OCR
-            
-        Returns:
-            Code devise ISO (EUR, USD, etc.) ou None
-        """
+
+    def extract_currency(self, text: str) -> str:
+        """Extrait la devise, défaut EUR"""
         text_lower = text.lower()
-        
-        for pattern in self.CURRENCY_PATTERNS:
-            match = re.search(pattern, text_lower, re.IGNORECASE)
-            if match:
-                currency_raw = match.group(1).lower()
-                currency_code = self.CURRENCY_MAPPING.get(currency_raw)
-                if currency_code:
-                    logger.info(f"Devise extraite: {currency_code}")
-                    return currency_code
-        
-        # Par défaut, supposer EUR pour la France
-        logger.info("Aucune devise trouvée, défaut: EUR")
+        for symbol, code in self.CURRENCY_MAPPING.items():
+            if symbol in text_lower:
+                return code
         return "EUR"
-    
+
+    def extract_merchant(self, text: str) -> Optional[str]:
+        """Tente d'extraire le nom du magasin (souvent la 1ère ligne non vide)"""
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        if lines:
+            # On prend la première ligne, en ignorant les lignes trop courtes (bruit)
+            for line in lines[:3]:
+                if len(line) > 3 and not any(char.isdigit() for char in line):
+                    return line
+        return None
+
     def extract_all(self, text: str) -> Dict[str, Any]:
-        """
-        Extrait toutes les informations du texte OCR
-        
-        Args:
-            text: Texte extrait par OCR
-            
-        Returns:
-            Dictionnaire avec date, montant, TVA, devise
-        """
+        """Extrait toutes les données"""
         return {
             'date': self.extract_date(text),
             'amount': self.extract_amount(text),
             'tva': self.extract_tva(text),
             'currency': self.extract_currency(text),
+            'merchant': self.extract_merchant(text),
             'raw_text': text
         }
