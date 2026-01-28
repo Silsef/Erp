@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# FastAPI
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Données
+data/raw/*
+data/annotated/*
+!data/raw/.gitkeep
+!data/annotated/.gitkeep
+
+# Modèles
+models/*
+!models/.gitkeep
+
+# Temporaires
+*.tmp
+temp/
+tmp/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# PaddleOCR cache
+.paddleocr/
+inference/

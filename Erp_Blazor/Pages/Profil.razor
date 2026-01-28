@@ -320,7 +320,6 @@
         }
     }
 </div>
-
 @code {
     [Parameter]
     public int? EmployeIdParam { get; set; }
@@ -329,6 +328,8 @@
     private int EmployeConnecteId;
     private string EmployeConnecteNom = "";
     private bool IsChefDeProjet = false;
+
+    // Cette propriété doit être calculée dynamiquement
     private bool IsOwnProfile => EmployeIdAffiche == EmployeConnecteId;
 
     private int EmployeIdAffiche;
@@ -373,8 +374,16 @@
                 IsChefDeProjet = _user.IsInRole("Chef de projet");
             }
         }
+    }
 
+    protected override async Task OnParametersSetAsync()
+    {
         EmployeIdAffiche = EmployeIdParam ?? EmployeConnecteId;
+
+        if (EmployeConnecteId == 0) return;
+
+        ErrorMessage = null;
+        IsLoading = true;
 
         if (!IsOwnProfile && !IsChefDeProjet)
         {
@@ -386,6 +395,7 @@
         await LoadEmployeData();
         await LoadProjets();
 
+        // 5. Initialisation date calendrier (si nécessaire de reset à chaque nav)
         var now = DateTime.Now;
         NumSemaine = ISOWeek.GetWeekOfYear(now);
         Annee = now.Year;
@@ -409,12 +419,19 @@
     {
         try
         {
-            Projets = await ProjetService.GetProjetsByEmployeId(EmployeConnecteId);        }
+            // Attention : ici vous chargiez les projets de "EmployeConnecteId" dans votre code original.
+            // Si vous voulez voir les projets du profil visité, il faut utiliser "EmployeIdAffiche".
+            // Je corrige pour utiliser EmployeIdAffiche (le profil visité).
+            Projets = await ProjetService.GetProjetsByEmployeId(EmployeIdAffiche);
+        }
         catch (Exception ex)
         {
             ErrorMessage = $"Erreur lors du chargement des projets : {ex.Message}";
         }
     }
+
+    // ... Le reste des méthodes (InitCalendrier, LoadCalendrierData, SaveFeuille, etc.) reste identique ...
+    // Assurez-vous simplement de bien copier les méthodes existantes ci-dessous
 
     // ========== CALENDRIER ==========
     private async Task InitCalendrier()
@@ -433,10 +450,10 @@
         try
         {
             FeuillesTemps = await FeuilleTempsService.GetBySemaine(
-                EmployeIdAffiche,
+                EmployeIdAffiche, // Utilisation de l'ID affiché
                 NumSemaine,
                 Annee,
-                null 
+                null
             );
 
             CalculateDates();
@@ -457,10 +474,8 @@
         var jan4 = new DateTime(Annee, 1, 4);
         int daysOffset = jan4.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)jan4.DayOfWeek - 1;
         var firstMonday = jan4.AddDays(-daysOffset);
-
         StartOfWeek = firstMonday.AddDays((NumSemaine - 1) * 7);
         EndOfWeek = StartOfWeek.AddDays(4);
-
         JoursSemaine = new List<JourSemaine>
         {
             new JourSemaine { Nom = "Lundi", Date = StartOfWeek },
@@ -481,24 +496,14 @@
 
     private RenderFragment RenderCell(DateTime date, bool estMatin) => builder =>
     {
-        var feuille = FeuillesTemps.FirstOrDefault(f =>
-            f.Date.Date == date.Date && f.EstMatin == estMatin);
-
+        var feuille = FeuillesTemps.FirstOrDefault(f => f.Date.Date == date.Date && f.EstMatin == estMatin);
         bool isEditable = IsOwnProfile;
         var cellClass = feuille != null ? "calendar-cell filled" : "calendar-cell empty";
-
-        if (!isEditable)
-        {
-            cellClass += " read-only";
-        }
+        if (!isEditable) cellClass += " read-only";
 
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", cellClass);
-
-        if (isEditable)
-        {
-            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
-        }
+        if (isEditable) builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => OpenModal(date, estMatin, feuille)));
 
         if (feuille != null)
         {
@@ -509,7 +514,6 @@
             builder.AddAttribute(6, "class", "presence-indicator");
             builder.AddContent(7, "✓ Présent");
             builder.CloseElement();
-
             if (!string.IsNullOrEmpty(feuille.ProjetNom))
             {
                 builder.OpenElement(8, "div");
@@ -545,15 +549,12 @@
                 builder.CloseElement();
             }
         }
-
         builder.CloseElement();
     };
 
     private void OpenModal(DateTime date, bool estMatin, FeuilleTempsDTO? feuille)
     {
-        if (!IsOwnProfile)
-            return;
-
+        if (!IsOwnProfile) return;
         EditingFeuille = feuille;
         ModalDate = date;
         ModalEstMatin = estMatin;
@@ -573,7 +574,6 @@
     private async Task SaveFeuille()
     {
         ErrorMessage = null;
-
         try
         {
             if (EditingFeuille != null)
@@ -582,7 +582,7 @@
                 {
                     Id = EditingFeuille.Id,
                     Commentaire = ModalCommentaire,
-                    TacheId = null, 
+                    TacheId = null,
                     ProjetId = ModalProjetId
                 };
                 await FeuilleTempsService.Put(EditingFeuille.Id, updateDto);
@@ -594,12 +594,11 @@
                     Date = ModalDate,
                     EstMatin = ModalEstMatin,
                     ProjetId = ModalProjetId,
-                    TacheId = null, 
+                    TacheId = null,
                     Commentaire = ModalCommentaire
                 };
                 await FeuilleTempsService.Post(createDto);
             }
-
             await LoadCalendrierData();
             CloseModal();
         }
@@ -612,9 +611,7 @@
     private async Task DeleteFeuille()
     {
         if (EditingFeuille == null) return;
-
         ErrorMessage = null;
-
         try
         {
             await FeuilleTempsService.Delete(EditingFeuille.Id);
@@ -627,20 +624,16 @@
         }
     }
 
-    // ========== HELPERS ==========
     private string MaskSecuriteSociale(string numero)
     {
-        if (IsOwnProfile || IsChefDeProjet)
-            return numero;
-
+        if (IsOwnProfile || IsChefDeProjet) return numero;
+        if (string.IsNullOrEmpty(numero)) return "Non renseigné";
         return numero.Length > 4 ? "XXX XXX XXX " + numero.Substring(numero.Length - 4) : "XXXX";
     }
 
     private string TruncateText(string text, int maxLength)
     {
-        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
-            return text;
-
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength) return text;
         return text.Substring(0, maxLength) + "...";
     }
 
@@ -666,4 +659,5 @@
         public string Nom { get; set; } = "";
         public DateTime Date { get; set; }
     }
+}
 }

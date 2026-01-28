@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  receipt-detector:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    container_name: receipt-detector-api
