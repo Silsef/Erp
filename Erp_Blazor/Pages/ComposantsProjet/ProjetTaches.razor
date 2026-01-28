@@ -200,16 +200,12 @@ else
     {
         if (SelectedProjet != null)
         {
-            // On recharge si la liste est vide ou si le projet a changé (on pourrait optimiser ici)
-            // Pour simplifier, on recharge pour être sûr d'être à jour
             await LoadTaches();
         }
 
-        // Si on vient de l'onglet participants
         if (PreSelectedTache != null)
         {
             SelectedTache = PreSelectedTache;
-            // On notifie le parent qu'on a traité la sélection pour ne pas re-loop
             await OnTacheSelectedHandled.InvokeAsync();
         }
     }
@@ -288,7 +284,9 @@ else
                         <i class="bi bi-person-circle"></i>
                         @if (IsChefDeProjet && tache.EmployeAssigneId.HasValue)
                         {
+                            <a href="profil/@tache.EmployeAssigneId">
                             <span class="fw-bold">@tache.EmployeAssigneNom</span>
+                            </a>
                         }
                         else
                         {

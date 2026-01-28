@@ -1,0 +1,24 @@
+﻿/* Duplication nécessaire pour l'isolation CSS */
+.bulle-priority-Basse {
+    background-color: #28a745;
+}
+
+.bulle-priority-Normale {
+    background-color: #17a2b8;
+}
+
+.bulle-priority-Haute {
+    background-color: #ffc107;
+}
+
+.bulle-priority-Urgente {
+    background-color: #dc3545;
+}
+
+.card {
+    transition: box-shadow 0.2s;
+}
+
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
