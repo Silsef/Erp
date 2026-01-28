@@ -15,7 +15,7 @@ class OCRService:
         """Initialise PaddleOCR"""
         try:
             # Initialiser PaddleOCR (français + anglais)
-            # Version 3.3.3 - paramètres simplifiés
+            # Paramètres minimaux compatibles avec toutes versions
             self.ocr = PaddleOCR(
                 use_angle_cls=True,
                 lang='fr'
@@ -33,7 +33,7 @@ class OCRService:
             image: Image en format numpy array
             
         Returns:
-            Image prétraitée
+            Image prétraitée (conserve 3 canaux pour PaddleOCR)
         """
         # Conversion en niveaux de gris
         if len(image.shape) == 3:
@@ -58,7 +58,11 @@ class OCRService:
             2
         )
         
-        return binary
+        # IMPORTANT: Convertir en 3 canaux pour PaddleOCR
+        # PaddleOCR attend une image avec 3 canaux (BGR)
+        processed_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+        
+        return processed_bgr
     
     def extract_text(self, image_path: str, preprocess: bool = True) -> Tuple[str, float]:
         """
@@ -83,8 +87,8 @@ class OCRService:
             else:
                 processed_image = image
             
-            # OCR
-            result = self.ocr.ocr(processed_image, cls=True)
+            # OCR - CORRECTION: retrait du paramètre cls
+            result = self.ocr.ocr(processed_image)
             
             if not result or not result[0]:
                 logger.warning("Aucun texte détecté dans l'image")
@@ -135,8 +139,8 @@ class OCRService:
             else:
                 processed_image = image
             
-            # OCR
-            result = self.ocr.ocr(processed_image, cls=True)
+            # OCR - CORRECTION: retrait du paramètre cls
+            result = self.ocr.ocr(processed_image)
             
             if not result or not result[0]:
                 logger.warning("Aucun texte détecté dans l'image")

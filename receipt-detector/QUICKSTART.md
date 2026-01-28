@@ -1,57 +1,56 @@
-# 🚀 Guide de Démarrage Rapide
+# 🚀 Guide de Démarrage Rapide - Version Corrigée
 
-## Installation en 3 étapes
+## ⚡ Installation Ultra-Rapide
 
-### 1️⃣ Préparer l'environnement
+### Option 1 : Script automatique (Linux/Mac)
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+### Option 2 : Installation manuelle
 
 ```bash
-# Créer un environnement virtuel
-python -m venv venv
+# 1. Créer un environnement virtuel
+python3 -m venv venv
 
-# Activer l'environnement
+# 2. Activer l'environnement
 # Sur Linux/Mac:
 source venv/bin/activate
 # Sur Windows:
 venv\Scripts\activate
 
-# Installer les dépendances
+# 3. Installer les dépendances
 pip install -r requirements.txt
 ```
 
-**⏱️ Temps estimé**: 5-10 minutes (téléchargement des modèles PaddleOCR)
+**⏱️ Temps estimé**: 5-10 minutes
 
-### 2️⃣ Lancer l'API
+## 🏃 Lancer l'API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-L'API sera accessible sur: `http://localhost:8000`
+✅ API accessible sur: `http://localhost:8000`
 
-### 3️⃣ Tester l'API
+## 🧪 Tester (3 options)
 
-**Option A - Interface Web** 🌐
-
-Ouvrir `test_interface.html` dans votre navigateur et uploader une image de ticket.
-
-**Option B - Script Python** 🐍
-
+### Option A - Script Python Simple 🐍
 ```bash
-python test_api.py chemin/vers/ticket.jpg
+python test_simple.py chemin/vers/ticket.jpg
 ```
 
-**Option C - curl** 💻
-
+### Option B - curl 💻
 ```bash
 curl -X POST "http://localhost:8000/api/v1/analyze" \
   -F "file=@ticket.jpg"
 ```
 
-**Option D - Documentation interactive** 📚
+### Option C - Documentation interactive 📚
+Ouvrir `http://localhost:8000/docs` dans votre navigateur
 
-Ouvrir `http://localhost:8000/docs` dans votre navigateur.
-
-## 📊 Exemple de réponse
+## 📊 Exemple de réponse (NOUVEAU: avec TVA!)
 
 ```json
 {
@@ -62,6 +61,7 @@ Ouvrir `http://localhost:8000/docs` dans votre navigateur.
       "receipt_info": {
         "date": "2026-01-28",
         "amount": 45.50,
+        "tva": 7.58,
         "currency": "EUR",
         "confidence": 0.95
       },
@@ -72,103 +72,135 @@ Ouvrir `http://localhost:8000/docs` dans votre navigateur.
 }
 ```
 
-## 🎯 Cas d'usage
+## 🆕 Nouveautés de cette version
 
-### 1. Un seul ticket
-Uploadez simplement l'image, l'API détectera automatiquement le ticket.
+### ✅ Bug PaddleOCR corrigé
+Le paramètre `cls` a été retiré des appels OCR.
 
-### 2. Plusieurs tickets sur une image
-L'API détectera et analysera chaque ticket séparément.
+### ✅ Support de la TVA ajouté
+L'API extrait maintenant automatiquement le montant de la TVA.
 
-### 3. Ticket flou ou de mauvaise qualité
-Le prétraitement automatique améliore la qualité avant l'OCR.
+**Formats supportés** :
+- `TVA 20%: 10.50`
+- `TVA: 10.50 EUR`
+- `T.V.A. 10,50`
+- `TVA 20.00% 10.50`
 
-## ⚙️ Configuration
+## 🎯 Informations extraites
 
-### Changer la langue OCR
+1. 📅 **Date** du ticket
+2. 💰 **Montant** total
+3. 🧾 **TVA** (nouveau!)
+4. 💱 **Devise** (EUR, USD, GBP, CHF)
+5. 📈 **Score de confiance** OCR
 
-Dans `app/services/ocr_service.py`:
-
-```python
-self.ocr = PaddleOCR(
-    use_angle_cls=True,
-    lang='en',  # 'fr', 'en', 'ch', 'spanish', etc.
-    show_log=False
-)
-```
-
-### Activer le GPU
-
-Dans `app/services/ocr_service.py`:
-
-```python
-self.ocr = PaddleOCR(
-    use_angle_cls=True,
-    lang='fr',
-    use_gpu=True  # ← Active le GPU
-)
-```
-
-## 🐛 Problèmes courants
+## 🐛 Résolution de problèmes
 
 ### L'API ne démarre pas
-- Vérifier que l'environnement virtuel est activé
-- Vérifier que toutes les dépendances sont installées
+```bash
+# Vérifier que l'environnement est activé
+which python  # Doit pointer vers venv/bin/python
+
+# Réinstaller les dépendances
+pip install -r requirements.txt --force-reinstall
+```
+
+### Erreur PaddleOCR
+```bash
+# Vérifier l'installation
+python -c "from paddleocr import PaddleOCR; print('OK')"
+
+# Si erreur, réinstaller
+pip install paddlepaddle paddleocr --force-reinstall
+```
 
 ### Aucun texte détecté
-- Vérifier la qualité de l'image
-- Tester avec l'endpoint `/api/v1/ocr-only` pour voir le texte brut
-- Essayer d'améliorer la résolution de l'image
+- Utilisez des images de bonne qualité (min 1000px)
+- Assurez un bon contraste et éclairage
+- Testez avec `/api/v1/ocr-only` pour voir le texte brut
 
-### Montant ou date non extraits
-- Vérifier le format dans le texte brut (endpoint OCR)
-- Adapter les regex dans `app/services/extraction_service.py`
+### TVA non détectée
+- Vérifiez que le ticket contient bien une ligne TVA
+- Le format doit contenir "TVA" suivi d'un montant
+- Testez avec `/api/v1/ocr-only` pour voir le texte brut
 
 ## 📞 Endpoints disponibles
 
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/` | GET | Page d'accueil |
-| `/health` | GET | Health check |
-| `/api/v1/analyze` | POST | Analyser un ticket |
-| `/api/v1/ocr-only` | POST | OCR uniquement |
-| `/docs` | GET | Documentation Swagger |
+| Endpoint | Description |
+|----------|-------------|
+| `GET /` | Page d'accueil |
+| `GET /health` | Health check |
+| `POST /api/v1/analyze` | **Analyse complète** (date, montant, TVA, devise) |
+| `POST /api/v1/ocr-only` | OCR seul (debug) |
+| `GET /docs` | Documentation Swagger |
 
-## 🎓 Prochaines étapes
+## 💡 Astuces pour de meilleurs résultats
 
-1. **Tester avec vos propres tickets** pour valider la détection
-2. **Adapter les regex** si les formats ne correspondent pas
-3. **Fine-tuner les patterns** selon vos besoins spécifiques
-4. **Dockeriser** pour un déploiement facile
+✅ **DO** :
+- Images haute résolution (>1000px)
+- Bon éclairage sans reflets
+- Photos bien droites
+- Tickets à plat
 
-## 💡 Astuces
+❌ **DON'T** :
+- Images floues ou sombres
+- Tickets froissés
+- Reflets importants
+- Résolution trop faible
 
-- Pour de meilleurs résultats, utilisez des images haute résolution (min 1000px de largeur)
-- Les tickets doivent être bien éclairés et sans reflets
-- Pour plusieurs tickets, espacez-les bien dans l'image
-- Utilisez le format JPEG ou PNG
-
-## 🔄 Workflow recommandé
+## 🔄 Workflow
 
 ```
-1. Upload image → 
-2. Détection des zones de tickets → 
-3. OCR sur chaque zone → 
-4. Extraction avec regex → 
+1. Upload image
+   ↓
+2. Détection des zones de tickets
+   ↓
+3. OCR sur chaque zone
+   ↓
+4. Extraction avec regex
+   ↓
 5. Retour JSON structuré
 ```
 
-## 🚀 Déploiement avec Docker
+## 🎓 Prochaines étapes
+
+1. ✅ Tester avec vos tickets
+2. ✅ Adapter les regex si nécessaire
+3. ✅ Déployer avec Docker (si besoin)
+
+## 📦 Structure des fichiers corrigés
+
+```
+receipt-detector/
+├── app/
+│   ├── main.py                 ✅ Mis à jour (support TVA)
+│   ├── models/schemas.py       ✅ Mis à jour (champ TVA)
+│   └── services/
+│       ├── ocr_service.py      ✅ CORRIGÉ (bug cls)
+│       └── extraction_service.py ✅ Mis à jour (TVA)
+├── requirements.txt
+├── install.sh                  🆕 Script d'installation
+├── test_simple.py              🆕 Script de test
+├── QUICKSTART.md               📄 Ce fichier
+└── README_CORRECTIONS.md       📄 Détails des corrections
+```
+
+## 🚀 C'est parti !
 
 ```bash
-# Build
-docker-compose build
+# 1. Installation
+./install.sh  # ou installation manuelle
 
-# Lancer
-docker-compose up -d
+# 2. Lancer l'API
+uvicorn app.main:app --reload
 
-# Logs
-docker-compose logs -f
+# 3. Tester
+python test_simple.py mon_ticket.jpg
 ```
+
+## 📚 Documentation complète
+
+- **Corrections détaillées** : `README_CORRECTIONS.md`
+- **API interactive** : `http://localhost:8000/docs`
 
 Bon développement ! 🎉

@@ -29,6 +29,16 @@ class ExtractionService:
         r'\b([0-9]+[,\.][0-9]{2})\s*$',
     ]
     
+    # Patterns pour la TVA
+    TVA_PATTERNS = [
+        # Format: TVA 20%: 10.50, TVA: 10.50 EUR
+        r'(?:tva|t\.v\.a\.|taxe)[\s:]*(?:20%|10%|5,5%|2,1%)?[\s:]*([0-9]+[,\.][0-9]{2})',
+        # Format: TVA 20.00%  10.50
+        r'tva\s+[0-9]+[,\.][0-9]{1,2}%\s+([0-9]+[,\.][0-9]{2})',
+        # Format ligne avec "TVA" suivi d'un montant
+        r'tva.*?([0-9]+[,\.][0-9]{2})',
+    ]
+    
     # Patterns pour les devises
     CURRENCY_PATTERNS = [
         r'\b(EUR|€|euro|euros)\b',
@@ -153,6 +163,41 @@ class ExtractionService:
         logger.warning("Aucun montant trouvé")
         return None
     
+    def extract_tva(self, text: str) -> Optional[float]:
+        """
+        Extrait le montant de la TVA du texte OCR
+        
+        Args:
+            text: Texte extrait par OCR
+            
+        Returns:
+            Montant TVA en float ou None
+        """
+        text_lower = text.lower()
+        tva_amounts = []
+        
+        for pattern in self.TVA_PATTERNS:
+            matches = re.finditer(pattern, text_lower, re.IGNORECASE)
+            for match in matches:
+                try:
+                    tva_str = match.group(1)
+                    # Remplacer virgule par point
+                    tva_str = tva_str.replace(',', '.')
+                    tva = float(tva_str)
+                    tva_amounts.append(tva)
+                except (ValueError, IndexError) as e:
+                    logger.debug(f"TVA invalide ignorée: {match.group()} - {e}")
+                    continue
+        
+        if tva_amounts:
+            # Retourner le montant le plus élevé si plusieurs trouvés
+            tva_amount = max(tva_amounts)
+            logger.info(f"TVA extraite: {tva_amount}")
+            return tva_amount
+        
+        logger.warning("Aucun montant de TVA trouvé")
+        return None
+    
     def extract_currency(self, text: str) -> Optional[str]:
         """
         Extrait la devise du texte OCR
@@ -186,11 +231,12 @@ class ExtractionService:
             text: Texte extrait par OCR
             
         Returns:
-            Dictionnaire avec date, montant, devise
+            Dictionnaire avec date, montant, TVA, devise
         """
         return {
             'date': self.extract_date(text),
             'amount': self.extract_amount(text),
+            'tva': self.extract_tva(text),
             'currency': self.extract_currency(text),
             'raw_text': text
         }

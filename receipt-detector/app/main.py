@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 # Initialisation de l'application FastAPI
 app = FastAPI(
     title="Receipt Detector API",
-    description="API pour détecter et extraire les informations des tickets de caisse",
-    version="1.0.0"
+    description="API pour détecter et extraire les informations des tickets de caisse (date, montant, TVA, devise)",
+    version="1.0.1"
 )
 
 # Configuration CORS
@@ -80,7 +80,7 @@ async def analyze_receipt(
 ):
     """
     Analyse une image contenant un ou plusieurs tickets de caisse
-    et extrait les informations (date, montant, devise)
+    et extrait les informations (date, montant, TVA, devise)
     
     Args:
         file: Fichier image uploadé (PNG, JPG, JPEG)
@@ -140,6 +140,7 @@ async def analyze_receipt(
                 receipt_info = ReceiptInfo(
                     date=extracted_info['date'],
                     amount=extracted_info['amount'],
+                    tva=extracted_info['tva'],
                     currency=extracted_info['currency'],
                     raw_text=text,
                     confidence=confidence
@@ -161,7 +162,8 @@ async def analyze_receipt(
                 detected_receipts.append(detected_receipt)
                 
                 logger.info(f"Ticket #{idx} traité - Date: {extracted_info['date']}, "
-                          f"Montant: {extracted_info['amount']}, Devise: {extracted_info['currency']}")
+                          f"Montant: {extracted_info['amount']}, TVA: {extracted_info['tva']}, "
+                          f"Devise: {extracted_info['currency']}")
                 
             finally:
                 # Nettoyer le fichier temporaire de la région

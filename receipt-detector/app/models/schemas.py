@@ -7,6 +7,7 @@ class ReceiptInfo(BaseModel):
     """Informations extraites d'un ticket de caisse"""
     date: Optional[str] = Field(None, description="Date du ticket (format détecté)")
     amount: Optional[float] = Field(None, description="Montant total")
+    tva: Optional[float] = Field(None, description="Montant de la TVA")
     currency: Optional[str] = Field(None, description="Devise (EUR, USD, etc.)")
     raw_text: Optional[str] = Field(None, description="Texte brut extrait par OCR")
     confidence: Optional[float] = Field(None, description="Confiance globale de l'extraction")
