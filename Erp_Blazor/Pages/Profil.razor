@@ -395,7 +395,6 @@
         await LoadEmployeData();
         await LoadProjets();
 
-        // 5. Initialisation date calendrier (si nécessaire de reset à chaque nav)
         var now = DateTime.Now;
         NumSemaine = ISOWeek.GetWeekOfYear(now);
         Annee = now.Year;
@@ -419,9 +418,6 @@
     {
         try
         {
-            // Attention : ici vous chargiez les projets de "EmployeConnecteId" dans votre code original.
-            // Si vous voulez voir les projets du profil visité, il faut utiliser "EmployeIdAffiche".
-            // Je corrige pour utiliser EmployeIdAffiche (le profil visité).
             Projets = await ProjetService.GetProjetsByEmployeId(EmployeIdAffiche);
         }
         catch (Exception ex)

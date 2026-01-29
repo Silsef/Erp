@@ -29,13 +29,24 @@ namespace Erp_Blazor.Service.Security
             {
                 try
                 {
-                    // Nettoyer le token des guillemets éventuels
                     token = token.Replace("\"", "");
+                    var claims = ParseClaimsFromJwt(token);
 
-                    // 2. Parser les claims du JWT
-                    identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+                    var expirationClaim = claims.FirstOrDefault(c => c.Type == "exp");
+                    if (expirationClaim != null)
+                    {
+                        var exp = long.Parse(expirationClaim.Value);
+                        var expDate = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
 
-                    // 3. Ajouter le token dans les headers HTTP
+                        if (expDate <= DateTime.UtcNow)
+                        {
+                            // Le token est expiré ! On nettoie et on retourne "non connecté"
+                            await _localStorage.RemoveItemAsync("authToken");
+                            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+                        }
+                    }
+
+                    identity = new ClaimsIdentity(claims, "jwt");
                     _http.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", token);
                 }

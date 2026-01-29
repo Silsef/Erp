@@ -194,13 +194,17 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Type de Projet</label>
-                            <InputSelect class="form-select" @bind-Value="NewProjet.TypeProjetId">
-                                <option value="">-- Sélectionner un type de projet --</option>
-                                @foreach (var typ in TypesProjet)
-                                {
-                                    <option value="@typ.Id">@typ.Nom</option>
-                                }
-                            </InputSelect>
+                            <div class="d-flex gap-2">
+
+                                <InputSelect class="form-select" @bind-Value="NewProjet.TypeProjetId">
+                                    <option value="">-- Sélectionner un type de projet --</option>
+                                    @foreach (var typ in TypesProjet)
+                                    {
+                                        <option value="@typ.Id">@typ.Nom</option>
+                                    }
+                                </InputSelect>
+                                <button type="button" class="btn btn-secondary" @onclick="OpenModalTypeProjet">+</button>
+                            </div>
                             <ValidationMessage For="@(() => NewProjet.TypeProjetId)" />
                         </div>
                     </div>
@@ -242,10 +246,10 @@
                             </div>
                             <div class="col-md-5">
                                 <div class="form-floating">
-                                    <InputText id="telEntite" class="form-control" @bind-Value="NewEntite.Telephone" placeholder="Tel" />
-                                    <label for="telEntite">Téléphone</label>
+                                    <InputText id="telEntite" class="form-control" @bind-Value="NewEntite.Contact" placeholder="Tel" />
+                                    <label for="telEntite">Contact</label>
                                 </div>
-                                <ValidationMessage For="@(() => NewEntite.Telephone)" class="text-danger small ms-1" />
+                                <ValidationMessage For="@(() => NewEntite.Contact)" class="text-danger small ms-1" />
                             </div>
                         </div>
 
@@ -316,6 +320,45 @@
     </div>
 }
 
+
+@* Modale de création de type de projet *@
+@if (ShowModalCreateTypeProjet)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-content-modern">
+                <EditForm Model="@NewTypeProjet" OnValidSubmit="SaveNewTypeProjet">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header modal-header-modern">
+                        <div>
+                            <h5 class="modal-title fw-bold text-primary">
+                                <i class="bi bi-building-add me-2"></i>Nouveau type de projet
+                            </h5>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="CloseModalTypeProjet"></button>
+                    </div>
+                    <div class="modal-body modal-body-modern">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <div class="form-floating">
+                                    <InputText id="nomType" class="form-control" @bind-Value="NewTypeProjet.Nom" placeholder="Nom" />
+                                    <label for="nomType">Nom du type de projet *</label>
+                                </div>
+                                <ValidationMessage For="@(() => NewTypeProjet.Nom)" class="text-danger small ms-1" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 pb-4 pe-4">
+                        <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" @onclick="CloseModalTypeProjet">Annuler</button>
+                        <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i> Créer le type de projet
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
 @code {
     [SupplyParameterFromQuery]
     public int? ProjetId { get; set; }
@@ -328,7 +371,7 @@
     private ProjetDTO? SelectedProjet;
     private string ActiveTab = "overview";
     private string? ErrorMessage;
-    
+
     // Variables utilisateur
     private int EmployeConnecteId;
     private string EmployeConnecteNom = "";
@@ -342,6 +385,12 @@
     // Gestion Modal Création Entité (Appelée depuis Création Projet)
     public bool ShowModalCreateEntite = false;
     public EntiteCreateDTO? NewEntite = new EntiteCreateDTO();
+
+
+    // Gestion Modal Création TypeProjet (Appelée depuis Création Projet)
+    public bool ShowModalCreateTypeProjet = false;
+    public TypeProjetCreateDTO? NewTypeProjet = new TypeProjetCreateDTO();
+
 
     // Communication inter-onglets (Participants -> Taches)
     private TacheDTO? TacheToSelectFromParticipants;
@@ -379,7 +428,7 @@
         {
             await GetProjets();
         }
-        
+
         // Initialisation par défaut pour le formulaire
         NewProjet.DateDebut = DateTime.Now;
         NewProjet.Priorite = NiveauPriorite.Normale;
@@ -489,6 +538,7 @@
         ShowModalCreateEntite = true;
     }
 
+
     public void CloseModalEntite()
     {
         ShowModalCreateEntite = false;
@@ -519,6 +569,36 @@
             Console.WriteLine(ErrorMessage);
         }
     }
+
+
+    public void OpenModalTypeProjet()
+    {
+        NewTypeProjet = new TypeProjetCreateDTO {};
+        ShowModalCreateTypeProjet= true;
+    }
+
+    public void CloseModalTypeProjet()
+    {
+        ShowModalCreateTypeProjet = false;
+    }
+
+    public async Task SaveNewTypeProjet()
+    {
+        ErrorMessage = null;
+        try
+        {
+            await TypeProjetService.Post(NewTypeProjet);
+            ShowModalCreateTypeProjet= false;
+            TypesProjet = await TypeProjetService.GetAll();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la création du type de projet : {ex.Message}";
+            Console.WriteLine(ErrorMessage);
+        }
+    }
+
 
     // Callback pour changer d'onglet depuis le composant enfant "Participants"
     private void HandleRequestSelectTache(TacheDTO tache)

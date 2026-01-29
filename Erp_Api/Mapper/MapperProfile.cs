@@ -26,7 +26,7 @@ namespace Erp_Api.Mapper
 
             CreateMap<EmployeEntite, EmployeEntiteDTO>()
                 .ForMember(dest => dest.NomEntreprise, opt => opt.MapFrom(src => src.Entite.Nom))
-                .ForMember(dest => dest.Telephone, opt => opt.MapFrom(src => src.Entite.Telephone))
+                .ForMember(dest => dest.Contact, opt => opt.MapFrom(src => src.Entite.Contact))
                 .ForMember(dest => dest.Adresse, opt => opt.MapFrom(src => src.Entite.Adresse));
             CreateMap<Adresse, AdresseDTO>().ReverseMap();
 

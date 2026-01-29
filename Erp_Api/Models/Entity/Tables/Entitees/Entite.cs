@@ -16,8 +16,8 @@ namespace Erp_Api.Models.Entity.Tables.Entitees
 
         public Adresse? Adresse { get; set; }
 
-        [Column("ent_telephone")]
-        public string? Telephone { get; set; }
+        [Column("ent_contact")]
+        public string? Contact { get; set; }
 
         [Column("ent_siret")]
         public string? Siret { get; set; }

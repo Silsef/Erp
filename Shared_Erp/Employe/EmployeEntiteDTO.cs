@@ -18,7 +18,7 @@ namespace Shared_Erp.Employe
         //
         public string NomEntreprise { get; set; }
         public AdresseDTO? Adresse { get; set; }
-        public string? Telephone { get; set; }
+        public string? Contact { get; set; }
 
 
     }
