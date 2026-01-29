@@ -62,9 +62,6 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
 
-                // Parsing des erreurs (votre logique existante)
-                // ...
-                // Si on détecte une erreur spécifique, on l'affiche :
                 _toastService.ShowError("Erreur lors de la création. Vérifiez les données.");
                 throw new Exception($"Erreur création: {response.StatusCode}");
             }
@@ -78,7 +75,7 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
         }
         catch (Exception ex)
         {
-            _toastService.ShowError(ex.Message); // Affiche le message d'exception (ex: "Nom déjà existant")
+            _toastService.ShowError(ex.Message); 
             throw;
         }
     }
