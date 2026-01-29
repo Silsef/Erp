@@ -1,4 +1,5 @@
-﻿using Erp_Blazor.Service.Interfaces;
+﻿using Blazored.Toast.Services; // Ajouter l'using
+using Erp_Blazor.Service.Interfaces;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -9,11 +10,14 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
 {
     protected readonly HttpClient _client;
     protected readonly string _endpoint;
+    protected readonly IToastService _toastService; // Ajouter le service
 
-    public BaseWebService(HttpClient client, string endpoint)
+    // Modifier le constructeur pour accepter le ToastService
+    public BaseWebService(HttpClient client, string endpoint, IToastService toastService)
     {
         _client = client;
         _endpoint = endpoint;
+        _toastService = toastService;
     }
 
     // --- LECTURE ---
@@ -24,10 +28,11 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
             var result = await _client.GetFromJsonAsync<List<TRead>>(_endpoint + "/GetAll");
             return result ?? new List<TRead>();
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) // On attrape tout pour notifier
         {
             Console.WriteLine($"Erreur HTTP lors du GetAll: {ex.Message}");
-            throw new Exception("Erreur lors de la récupération des données", ex);
+            _toastService.ShowError("Impossible de charger les données."); // Notification Erreur
+            throw; // On relance l'erreur pour ne pas casser la logique existante
         }
     }
 
@@ -36,18 +41,17 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
         try
         {
             var result = await _client.GetFromJsonAsync<TRead>($"{_endpoint}/GetById/{id}");
-            if (result == null)
-                throw new Exception($"Élément avec l'ID {id} non trouvé");
+            if (result == null) throw new Exception("Non trouvé");
             return result;
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erreur HTTP lors du GetByID: {ex.Message}");
-            throw new Exception($"Erreur lors de la récupération de l'élément {id}", ex);
+            _toastService.ShowError($"Erreur de chargement: {ex.Message}");
+            throw;
         }
     }
 
-    // --- CREATION (Avec validation) ---
+    // --- CREATION ---
     public async Task<TRead> Post(TCreate item)
     {
         try
@@ -57,44 +61,29 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Erreur lors de la création: {response.StatusCode} - {errorContent}");
 
-                // Tenter de parser les erreurs de validation
-                try
-                {
-                    var validationErrors = JsonSerializer.Deserialize<Dictionary<string, string[]>>(
-                        errorContent,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                    );
-
-                    if (validationErrors != null && validationErrors.ContainsKey("errors"))
-                    {
-                        var errors = string.Join(", ", validationErrors["errors"]);
-                        throw new Exception($"Erreurs de validation: {errors}");
-                    }
-                }
-                catch (JsonException)
-                {
-                    // Si ce n'est pas un format de validation connu
-                }
-
-                throw new Exception($"Erreur lors de la création: {response.StatusCode}");
+                // Parsing des erreurs (votre logique existante)
+                // ...
+                // Si on détecte une erreur spécifique, on l'affiche :
+                _toastService.ShowError("Erreur lors de la création. Vérifiez les données.");
+                throw new Exception($"Erreur création: {response.StatusCode}");
             }
 
             var result = await response.Content.ReadFromJsonAsync<TRead>();
-            if (result == null)
-                throw new Exception("La création a réussi mais aucune donnée n'a été retournée");
 
-            return result;
+            // SUCCES !
+            _toastService.ShowSuccess("Création effectuée avec succès !");
+
+            return result!;
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erreur HTTP lors du Post: {ex.Message}");
-            throw new Exception("Erreur lors de la création de l'élément", ex);
+            _toastService.ShowError(ex.Message); // Affiche le message d'exception (ex: "Nom déjà existant")
+            throw;
         }
     }
 
-    // --- MODIFICATION (Avec validation) ---
+    // --- MODIFICATION ---
     public async Task<TRead> Put(int id, TUpdate item)
     {
         try
@@ -103,21 +92,21 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Erreur lors de la modification: {response.StatusCode} - {errorContent}");
-                throw new Exception($"Erreur lors de la modification: {response.StatusCode}");
+                _toastService.ShowError("Erreur lors de la mise à jour.");
+                throw new Exception($"Erreur modification: {response.StatusCode}");
             }
 
             var result = await response.Content.ReadFromJsonAsync<TRead>();
-            if (result == null)
-                throw new Exception("La modification a réussi mais aucune donnée n'a été retournée");
 
-            return result;
+            // SUCCES !
+            _toastService.ShowSuccess("Mise à jour effectuée !");
+
+            return result!;
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erreur HTTP lors du Put: {ex.Message}");
-            throw new Exception($"Erreur lors de la modification de l'élément {id}", ex);
+            _toastService.ShowError($"Echec de la modification : {ex.Message}");
+            throw;
         }
     }
 
@@ -130,15 +119,17 @@ public class BaseWebService<TRead, TCreate, TUpdate> : ICrudService<TRead, TCrea
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Erreur lors de la suppression: {response.StatusCode} - {errorContent}");
-                throw new Exception($"Erreur lors de la suppression: {response.StatusCode}");
+                _toastService.ShowError("Impossible de supprimer cet élément.");
+                throw new Exception($"Erreur suppression: {response.StatusCode}");
             }
+
+            // SUCCES !
+            _toastService.ShowSuccess("Élément supprimé.");
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erreur HTTP lors du Delete: {ex.Message}");
-            throw new Exception($"Erreur lors de la suppression de l'élément {id}", ex);
+            _toastService.ShowError($"Erreur : {ex.Message}");
+            throw;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Erp_Blazor.Service.Interfaces;
+﻿using Blazored.Toast.Services;
+using Erp_Blazor.Service.Interfaces;
 using Shared_Erp.FeuilleTemps;
 using System.Net.Http.Json;
 
@@ -6,7 +7,7 @@ namespace Erp_Blazor.Service.WebServices
 {
     public class FeuilleTempsWebService : BaseWebService<FeuilleTempsDTO, FeuilleTempsCreateDTO, FeuilleTempsUpdateDTO>, IFeuilleTempsService
     {
-        public FeuilleTempsWebService(HttpClient client) : base(client, "api/feuilletemps")
+        public FeuilleTempsWebService(HttpClient client, IToastService toastService) : base(client, "api/feuilletemps", toastService)
         {
         }
 
@@ -34,10 +35,18 @@ namespace Erp_Blazor.Service.WebServices
             }
 
             url = url.TrimEnd('?', '&');
+            try
+            {
 
-            var resultat = await _client.GetFromJsonAsync<List<FeuilleTempsDTO>>(url);
+                var resultat = await _client.GetFromJsonAsync<List<FeuilleTempsDTO>>(url);
 
-            return resultat ?? new List<FeuilleTempsDTO>();
+                return resultat ?? new List<FeuilleTempsDTO>();
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Impossible de récupérer les feuilles de temps.");
+                throw;
+            }
         }
     }
 }

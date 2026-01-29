@@ -7,6 +7,7 @@ using Erp_Blazor.Service.WebServices;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Blazored.Toast; 
 using System.Net.NetworkInformation;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -55,5 +56,7 @@ builder.Services.AddScoped<ITypeProjetService, TypeProjetWebService>();
 
 
 builder.Services.AddScoped<EntiteState>();
+
+builder.Services.AddBlazoredToast();
 
 await builder.Build().RunAsync();
